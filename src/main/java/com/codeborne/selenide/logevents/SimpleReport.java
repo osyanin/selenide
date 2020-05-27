@@ -1,20 +1,24 @@
 package com.codeborne.selenide.logevents;
 
-import com.google.common.base.Joiner;
+import org.slf4j.ILoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.NOPLogger;
+import org.slf4j.helpers.NOPLoggerFactory;
 
 import java.util.Collections;
 import java.util.OptionalInt;
-import java.util.logging.Logger;
 
 /**
  * A simple text report of Selenide actions performed during test run.
- * 
+ *
  * Class is thread-safe: the same instance of SimpleReport can be reused by different threads simultaneously.
  */
 public class SimpleReport {
-  private static final Logger log = Logger.getLogger(SimpleReport.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(SimpleReport.class);
 
   public void start() {
+    checkThatSlf4jIsConfigured();
     SelenideLogger.addListener("simpleReport", new EventsCollector());
   }
 
@@ -22,7 +26,7 @@ public class SimpleReport {
     EventsCollector logEventListener = SelenideLogger.removeListener("simpleReport");
 
     if (logEventListener == null) {
-      log.warning("Can not publish report because Selenide logger has not started.");
+      log.warn("Can not publish report because Selenide logger has not started.");
       return;
     }
 
@@ -38,7 +42,7 @@ public class SimpleReport {
     StringBuilder sb = new StringBuilder();
     sb.append("Report for ").append(title).append('\n');
 
-    String delimiter = '+' + Joiner.on('+').join(line(count), line(70), line(10), line(10)) + "+\n";
+    String delimiter = '+' + String.join("+", line(count), line(70), line(10), line(10)) + "+\n";
 
     sb.append(delimiter);
     sb.append(String.format("|%-" + count + "s|%-70s|%-10s|%-10s|%n", "Element", "Subject", "Status", "ms."));
@@ -51,12 +55,21 @@ public class SimpleReport {
     sb.append(delimiter);
     log.info(sb.toString());
   }
-  
+
   public void clean() {
     SelenideLogger.removeListener("simpleReport");
   }
 
   private String line(int count) {
-    return Joiner.on("").join(Collections.nCopies(count, "-"));
+    return String.join("", Collections.nCopies(count, "-"));
+  }
+
+  private static void checkThatSlf4jIsConfigured() {
+    ILoggerFactory loggerFactory = LoggerFactory.getILoggerFactory();
+    if (loggerFactory instanceof NOPLoggerFactory || loggerFactory.getLogger("com.codeborne.selenide") instanceof NOPLogger) {
+      throw new IllegalStateException("SLF4J is not configured. You will not see any Selenide logs. \n" +
+        "  Please add slf4j-simple.jar, slf4j-log4j12.jar or logback-classic.jar to your classpath. \n" +
+        "  See https://github.com/selenide/selenide/wiki/slf4j");
+    }
   }
 }

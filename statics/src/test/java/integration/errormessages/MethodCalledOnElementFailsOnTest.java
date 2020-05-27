@@ -18,9 +18,9 @@ import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 import static com.codeborne.selenide.WebDriverRunner.isFirefox;
-import static com.codeborne.selenide.WebDriverRunner.isHtmlUnit;
-import static com.codeborne.selenide.WebDriverRunner.isPhantomjs;
 import static integration.errormessages.Helper.assertScreenshot;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 class MethodCalledOnElementFailsOnTest extends IntegrationTest {
   @BeforeEach
@@ -54,15 +54,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
   }
 
   private void assertCauseMessage(UIAssertionError expected, String selector) {
-    if (isPhantomjs()) {
-      assertThat(expected.getCause()).hasMessageContaining("Unable to find element with css selector '" + selector + "'");
-    }
-    else if (isHtmlUnit()) {
-      if (!expected.getCause().getMessage().contains("Returned node (null) was not a DOM element")) {
-        assertThat(expected.getCause()).hasMessageContaining("Cannot find child element using css: " + selector);
-      }
-    }
-    else if (isFirefox()) {
+    if (isFirefox()) {
       assertThat(expected.getCause()).hasMessageContaining("Unable to locate element: " + selector);
     }
     else {
@@ -87,7 +79,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
       assertThat(expected.getCause())
         .isInstanceOf(IndexOutOfBoundsException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("Index: 1, Size: 0");
+        .hasMessageMatching("Index\\D+1\\D+0");
     }
   }
 
@@ -107,7 +99,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
       assertThat(expected.getCause())
         .isInstanceOf(IndexOutOfBoundsException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("Index: 10, Size: 2");
+        .hasMessageMatching("Index\\D+10\\D+2");
     }
   }
 
@@ -127,7 +119,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
       assertThat(expected.getCause())
         .isInstanceOf(IndexOutOfBoundsException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("Index: 10, Size: 2");
+        .hasMessageMatching("Index\\D+10\\D+2");
     }
   }
 
@@ -341,7 +333,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
       assertThat(expected.getCause())
         .isInstanceOf(IndexOutOfBoundsException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("Index: 0, Size: 0");
+        .hasMessageMatching("Index\\D+0\\D+0");
     }
   }
 
@@ -361,7 +353,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
       assertThat(expected.getCause())
         .isInstanceOf(IndexOutOfBoundsException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("Index: 0, Size: 0");
+        .hasMessageMatching("Index\\D+0\\D+0");
     }
   }
 
@@ -381,7 +373,7 @@ class MethodCalledOnElementFailsOnTest extends IntegrationTest {
       assertThat(expected.getCause())
         .isInstanceOf(IndexOutOfBoundsException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("Index: 2, Size: 2");
+        .hasMessageMatching("Index\\D+2\\D+2");
     }
   }
 

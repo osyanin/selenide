@@ -1,9 +1,155 @@
 # Changelog
 
-## 5.2.3
+## 5.12.1 (released 25.05.2020)
+* Enable running Selenide without "selenium-ie-driver.jar" "selenium-opera-driver.jar" etc.
+* #1170 fixed Concurrent modification exception in WebDriverFactory  -- see PR #1171
+* #1169 fix merging capabilities of types Array and List  --  see PR #1174
+
+## 5.12.0 (released 23.05.2020)
+* #1133 disable annoying "save password?" dialog  --  see PR #1134
+* #676, #1097 Allow passing of driver-specific options from a configuration  --  see PR #1155.
+  * Thanks to Boris Osipov for PR #1103 
+  * Thanks to @SeleniumTestAB for PR #1095 
+* #1109 Enable "mobile emulation" mode in grid --  see PR #1163
+* #1139 Cannot set Firefox preference via system properties  --  see PR #1165
+* #1093 Enable "ACCEPT_INSECURE_CERTS" setting for chromium-based Edge versions  --  see PR #1167
+* #1149 Upgrade to WebDriverManager 4.0.0
+* upgrade to browserup-proxy-core:2.1.0
+* #1138 fix 'emptyMethod' folder name  --  thanks to Denis Gaievskyi for PR #1138
+* #1140 Nullity annotations for the most used APIs  --  thanks to Yuriy Artamonov for PR #1140 and #1144
+* refactoring: Extract duplicated code  --  thanks to Yuriy Artamonov for PR #1143
+* Add missing findAll with CSS selector to SelenideDriver  --  thanks to Yuriy Artamonov for PR #1145
+
+## 5.11.1 (released 21.04.2020)
+* #1130 fix "because" condition for unexisting elements
+* #1114 strictly require slf4j only when using @TextReport rule/extension/listener
+
+## 5.11.0 (released 19.04.2020)
+
+Breaking changes:
+* #368 $("#missingElement").shouldNotHave(text("whatever")) now throws an exception    -- See PR #1116
+* #1114 throw a clear error message if SLF4J is not properly configured  --  see PR #1115
+* #1015 $.getWrappedElement() does not wait for timeout if element doesn't exist  --  see PR #1124
+
+Features & bugfixes:
+* #996 Add MatchAttributeWithValue condition -- thanks to Dmytro Stekanov for PR #1100
+* #1029 Add opportunity to get screenshots for the current thread -- thanks to Dmytro Stekanov for PR #1125 
+* Add CheckReturnValue annotation for methods that only return value  --  thanks to Yuriy Artamonov for PR #1106
+* Add missing byTagName to Selectors to make it consistent with By  --  thanks to Yuriy Artamonov for PR #1104
+* #1072 Normalize reports URL with spaces -- thanks to Dmytro Stekanov for PR #1098
+* #1119 disable annoying popup about extensions in Chrome  --  see PR #1120
+* make selectorMode and assertionMode configurable via system properties  --  see commit 231597eb6229e
+
+See https://github.com/selenide/selenide/milestone/94?closed=1
+
+## 5.10.0 (released 18.03.2020)
+* #1014 Add support for Shadow DOM  --  thanks to Dmytro Stekanov for #1090
+* #1021 Selenide does not fetch BrowserUpProxy dependency by default  --  see PR #1094
+* #1091 Migrated Guava API to the equivalent Java API  --  thanks to Wladimir Schmidt for PR #1091
+* #1032 Add quotes around selectors in Selenide logger  --  thanks to Dmytro Stekanov for #1092
+* #1069 add condition `$.shouldBe(image)`  --  thanks to Dmytro Stekanov for #1086
+* #1060 fix finding element by an attribute which contains quotes  --  thanks to Denys Lystopadskyy for PR #1062 
+
+## 5.9.0 (released 10.03.2020)
+* #1065 add method $.download(FileFilter)  --  see PR #1080
+* #1061 IE 3.150 doesn't start  --  thanks to Boris Osipov for PR #1075
+* #1039 Microsoft Edge doesn't start  --  thanks to Boris Osipov for PR #1084
+
+## 5.8.0 (released 28.02.2020)
+* #662 Added Condition with Predicate<WebElement> parameter as alternative to check element conditions  --  thanks to Dmytro Stekanov for #1059
+* #845 Added methods $.sibling() and $.preceding()  --  thanks to Dmytro Stekanov for #1064
+* #994 Added method to check content of ":before" and other pseudo elements  --  thanks to Denys Shynkarenko for PR #1045
+* #1071 Fixing issue when SoftAssertionsExtension for JUnit5 sometimes marked passed tests as failed 
+* $.click() now clicks the CENTER of element (also for Configuration.clickViaJS=true)  
+
+## 5.7.0 (released 07.02.2020)
+* #1025 Add setting `Configuration.downloadsFolder` --  thanks to Dmytro Stekanov for PR #1041
+* #1057 Download files to `Configuration.downloadsFolder` instead of ~/Downloads
+* #399 Add method for switching to a window with custom timeout  --  thanks to Dmytro Stekanov for PR #1054
+* #990 show "readonly" attribute of element  --  thanks to Dmytro Stekanov for PR #1042
+* #991 fix IndexOutOfBoundsException when searching from first/last element of empty collection  --  thanks to Dmytro Stekanov for PR #1043
+* #814 #880 fix Screenshots  --  thanks to Petro Ovcharenko for PR #1052
+* #1049 use env variable BUILD_URL (no need to add BUILD_URL to system properties anymore)  --  thanks to GongYi for PR #1049 
+* #1049 fix path to screenshots in Jenkins for multi-module maven projects  --  thanks to GongYi for PR #1049 
+* upgrade to WebDriverManager 3.8.1,  see https://github.com/bonigarcia/webdrivermanager/compare/webdrivermanager-3.8.1...master
+
+## 5.6.1 (released 14.01.2020)
+* #1030 Add method Selenide.executeAsyncScript()  --  thanks to Thierry Ygé @tyge68 for PR https://github.com/selenide/selenide/pull/1031
+* fix #1034 Selenide cannot download file if response doesn't contain "Content-Disposition" header,  see PR https://github.com/selenide/selenide/pull/1035
+* fix method WebDriverRunner.using(): don't close the webdriver itself,  see https://github.com/selenide/selenide/commit/4d1b19972d
+* upgrade to WebDriverManager 3.8.0,  see https://github.com/bonigarcia/webdrivermanager/compare/webdrivermanager-3.8.0...master
+
+## 5.6.0 (released 26.12.2019)
+* #1019 Migrate from BrowserMob to BrowserUp proxy   --  thanks to Aliaksandr Rasolka for PR #1020
+
+## 5.5.1 (released 29.11.2019)
+* #1008 add support for system property "chromeoptions.mobileEmulation"  --  see PR #1011
+* #1016 deprecate method `Selenide.close()`  --  see PR #1017
+
+## 5.5.0 (released 31.10.2019)
+* #923 Migrate from JUL to SLF4J  --  thanks to Gleb Schukin @gschukin for PR #926
+* Remove HtmlUnit dependency  --  thanks to Aliaksandr Rasolka for PR #1003
+* Remove PhantomJS dependency  --  thanks to Aliaksandr Rasolka for PR #998
+* Remove built-in support for Safari browser  (but you can still use Safari, see https://github.com/selenide/selenide/wiki/Safari)
+* Remove built-in support for jbrowser driver
+* #1000 make `$.execute(command)` generic: it now can return any value, or even be Void  --  see PR #1001
+* #999 make `holdBrowserOpen` setting work again  --  see PR #1005
+* #907 take a screenshot in case of `DialogTextMismatch` error  --  thanks to Nick Holloway @nwholloway for PR #986
+* refactor ScreenShotLaboratory  --  thanks to @SeleniumTestAB for PRs #1004 and #1006
+* add "selenide.remote" to exception info (in addition to "selenide.url" and "selenide.baseUrl")  --  see commit ba4f0544448de
+
+## 5.4.1 (released 16.10.2019)
+* bugfix: close webdriver in the end of all tests
+
+## 5.4.0 (released 16.10.2019)
+* #862 #902 #954 #922 fix "IllegalStateException WebDriver has been closed" (with a heavy heart!)   --  see PR #989
+* #896 Do close the browser in SelenideDriver.close()  --  see PR #989
+* #993 shorten the error message as it was before Selenide 5.3.1
+* #976 add method "using" to easy switch between webdrivers
+* #963 fail fast if xpath for searching inside a web element starts with /    --   see PR #975
+* upgrade to webdrivermanager:3.7.1
+* exclude old Guava dependency coming from net.lightbody.bmp:browsermob-core:2.1.5
+
+## 5.3.1 (released 08.09.2019)
+* #234 add a screenshot to error message in Maven too  -- see PR #972
+
+## 5.3.0 (released 02.09.2019)
+* support URLs with newlines
+* #469 improve error message of OR condition
+* #970 improve error message of `shouldHave(attribute("href", ..."))`
+* upgrade to webdrivermanager:3.6.2
+* add custom command executor
+
+## 5.2.8 (released 03.08.2019)
+* #961 Fix spam in logs "Failed to get attributes via JS..."
+* #930 Make method Condition.applyNull() overridable
+
+## 5.2.7 (released 01.08.2019)
+* #928 fix paradoxical "IllegalStateException: You need to call open(url) first" from open method
+* One more fix for $.toString() in Appium (iOS)
+
+## 5.2.6 (released 22.07.2019)
+* #496 Another fix for $.toString() in Appium
+
+## 5.2.5 (released 19.07.2019)
+* #496 Fix $.toString() in Appium
+* add Selenide.open() without string parameter  -- thanks to @yaroslav-orel for PR #956
+* Append condition explanation to $$.toString()  --  thanks to Roman Kliuha for PR #904
+
+## 5.2.4 (released 20.06.2019)
+* upgrade to WebDriverManager 3.6.1
+* fixed ScreenShooterExtension for JUnit5: now it takes screenshots for ALL errors (except UIAssertionError)
+* #454 $$.shouldHave(texts()) checks size of collection -- thanks to A.Smashentsev for PR #944
+* Fix proxy server on localhost for Chrome72+ and Firefox 67+  --  see https://github.com/selenide/selenide/pull/950
+* Now method $.click(offsetX, offsetY) calculates coordinates from the CENTER of element (not upper left corner)
+
+## 5.2.3 (released 07.05.2019)
 * upgrade to WebDriverManager 3.4.0
 * upgrade to htmlunit 2.34.1
 * upgrade to htmlunitDriver 2.34.0
+* #915 Add support for `open("about:blank")`
+* #927 Log event listener improvements  --  thanks to @pavelpp for PR
+* #912 (refactoring) extract Conditions to separate classes
 
 ## 5.2.2 (released 15.03.2019)
 * upgrade to WebDriverManager 3.3.0
@@ -47,7 +193,7 @@
 * #817 fix "FirefoxDriverFactory overwrites Firefox profile provided by Configuration"  --  thanks @BorisOsipov for PR #821
 * bugfix: method Selenide.download() should not fail if there is no opened browser yet
 * #825 Upgrade to WebDriverManager 3.0.0 (again)
-* #825 Add workaround for WebDriverManager issue when it calls github too often and gets 403 error
+* #825 Add a workaround for WebDriverManager issue when it calls github too often and gets 403 error
 * #832 Added support for screenshots outside of "user.dir" in CI server
 
 Technical changes (probably should not affect end users):
@@ -60,7 +206,7 @@ Technical changes (probably should not affect end users):
 ## 4.14.2 (released 22.09.2018)
 * Upgrade to htmlunit 2.33
 * Upgrade to Sizzle 2.3.4-pre
-* #804 avoid throwing NPE when `Configuration.reportFolder` is null
+* #804 avoid throwing NPE when `Configuration.reportsFolder` is null
 
 ## 4.14.1 (released 06.09.2018)
 * Upgrade to WebDriverManager 3.0.0
@@ -75,7 +221,7 @@ Technical changes (probably should not affect end users):
 
 ## 4.13.0 (released 20.08.2018)
 * #771 Added method `$.lastChild()` for retrieving the last child element of a given element
-* #601 Added collection checks with custom timeout  --  see PR #781
+* #601 Added collection checks with a custom timeout  --  see PR #781
 * #782 Added method `Selenide.download(url)`
 
 * #773 Upgraded to Selenium 3.14.0. 
@@ -85,7 +231,7 @@ Technical changes (probably should not affect end users):
 * #273 Method `switchTo().alert()` now throws `NoAlertPresentException` instead of `TimeoutException`  -- thanks to @tsukakei for PR #774
 * #709 Fixed a misleading error message $.selectOptionByValue() reports  -- thanks to Keita Tsukamoto for PR #780
 * #734 Fixed incorrect filename of downloaded file  -- thanks to @rosolko for PR 768
-* #783 Upgraded to webdrivermanager 2.2.5   -- see [https://github.com/bonigarcia/webdrivermanager/blob/master/changelog](changelog)
+* #783 Upgraded to webdrivermanager 2.2.5   -- see [changelog](https://github.com/bonigarcia/webdrivermanager/blob/master/changelog)
 * #775 Upgrade to htmlunit 2.32.1
 * #778 Fixed Selenide tests for FireFox
 
@@ -165,7 +311,7 @@ Technical changes (probably should not affect end users):
 
 * See #641 Increased Elements Collection performance -- thanks to Artem Savosik @CaBocuk for PR 653
 * See #639 Add "User-Agent" header when downloading file -- thanks to Aleksandr Rasolka @rosolko
-* See #556 add possibility to set custom capabilities for custom Chrome options or Firefox profies --Thanks to @SergeyPirogov for PR 556 and @BorisOsipov for PR 664
+* See #556 add possibility to set custom capabilities for custom Chrome options or Firefox profiles --Thanks to @SergeyPirogov for PR 556 and @BorisOsipov for PR 664
 * See #660 add possibility to create headless RemoteDriver -- thanks to @BorisOsipov for PR 661
 * See #597 support non-breakable spaces in `byText` and `withText`
 * See #649 Provide scrollIntoView to workaround problems in Firefox
@@ -174,7 +320,7 @@ Technical changes (probably should not affect end users):
 
 ## 4.9.1 (released 31.12.2017)
 
-* fixed bug where disabled input fields were not handled properly by setValue()
+* fixed a bug where disabled input fields were not handled properly by setValue()
 * fixed behaviour of setFastValue, which caused blur event to be ignored
 * See #654 fixed ClassCastException in WebDriverFactory#logBrowserVersion()
 
@@ -244,7 +390,7 @@ Technical changes (probably should not affect end users):
 
 ## 4.4.1 (released 28.03.2017)
 
-* Add workaround for invalid resolving of `selenium-api` dependency by Maven
+* Add a workaround for invalid resolving of `selenium-api` dependency by Maven
 
 ## 4.4 (released 27.03.2017)
 

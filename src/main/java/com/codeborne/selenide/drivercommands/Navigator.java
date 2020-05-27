@@ -13,12 +13,16 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 
 import java.net.URL;
+import java.util.regex.Pattern;
 
 import static com.codeborne.selenide.FileDownloadMode.PROXY;
 import static com.codeborne.selenide.logevents.LogEvent.EventStatus.PASS;
+import static java.util.regex.Pattern.DOTALL;
 
 public class Navigator {
-  private BasicAuthUrl basicAuthUrl = new BasicAuthUrl();
+  private static final Pattern ABSOLUTE_URL_REGEX = Pattern.compile("^[a-zA-Z]+:.*", DOTALL);
+
+  private final BasicAuthUrl basicAuthUrl = new BasicAuthUrl();
 
   public void open(SelenideDriver driver, String relativeOrAbsoluteUrl) {
     navigateTo(driver, relativeOrAbsoluteUrl, AuthenticationType.BASIC, "", "", "");
@@ -67,7 +71,24 @@ public class Navigator {
       SelenideLogger.commitStep(log, e);
       e.addInfo("selenide.url", url);
       e.addInfo("selenide.baseUrl", driver.config().baseUrl());
+      if (driver.config().remote() != null) {
+        e.addInfo("selenide.remote", driver.config().remote());
+      }
       throw e;
+    }
+    catch (RuntimeException | Error e) {
+      SelenideLogger.commitStep(log, e);
+      throw e;
+    }
+  }
+
+  public void open(SelenideDriver driver) {
+    checkThatProxyIsEnabled(driver.config());
+
+    SelenideLog log = SelenideLogger.beginStep("open", "");
+    try {
+      driver.getAndCheckWebDriver();
+      SelenideLogger.commitStep(log, PASS);
     }
     catch (RuntimeException | Error e) {
       SelenideLogger.commitStep(log, e);
@@ -138,13 +159,7 @@ public class Navigator {
   }
 
   boolean isAbsoluteUrl(String relativeOrAbsoluteUrl) {
-    return relativeOrAbsoluteUrl.toLowerCase().startsWith("http:") ||
-      relativeOrAbsoluteUrl.toLowerCase().startsWith("https:") ||
-      isLocalFile(relativeOrAbsoluteUrl);
-  }
-
-  private boolean isLocalFile(String url) {
-    return url.toLowerCase().startsWith("file:");
+    return ABSOLUTE_URL_REGEX.matcher(relativeOrAbsoluteUrl).matches();
   }
 
   public void back(Driver driver) {

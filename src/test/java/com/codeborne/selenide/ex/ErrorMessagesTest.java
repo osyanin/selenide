@@ -7,6 +7,7 @@ import com.codeborne.selenide.SelenideConfig;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import java.io.File;
@@ -21,7 +22,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.openqa.selenium.OutputType.FILE;
 
 class ErrorMessagesTest implements WithAssertions {
   private final ChromeDriver webDriver = mock(ChromeDriver.class);
@@ -57,11 +57,11 @@ class ErrorMessagesTest implements WithAssertions {
   @Test
   void convertsScreenshotFileNameToCIUrl() {
     config.reportsUrl("http://ci.mycompany.com/job/666/artifact/");
-    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(FILE);
+    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(OutputType.FILE);
 
     String screenshot = ErrorMessages.screenshot(driver);
     assertThat(screenshot)
-      .startsWith("\nScreenshot: http://ci.mycompany.com/job/666/artifact/build/reports/tests/")
+      .startsWith(String.format("%nScreenshot: http://ci.mycompany.com/job/666/artifact/build/reports/tests/"))
       .endsWith(".png");
   }
 
@@ -70,12 +70,12 @@ class ErrorMessagesTest implements WithAssertions {
     String reportsUrl = "http://ci.mycompany.com/job/666/artifact/";
     config.reportsUrl(reportsUrl);
     config.reportsFolder(Files.createTempDirectory("artifacts-storage").toFile().getAbsolutePath()); //directory, that not in 'user.dir'
-    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(FILE);
+    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(OutputType.FILE);
 
     String screenshot = ErrorMessages.screenshot(driver);
     assertThat(screenshot)
       .as("Concatenate reportUrl with screenshot file name if it saved outside of build/project home directories")
-      .startsWith("\nScreenshot: " + reportsUrl + new File(screenshot).getName());
+      .startsWith(String.format("%nScreenshot: %s", reportsUrl + new File(screenshot).getName()));
   }
 
   @Test
@@ -86,11 +86,13 @@ class ErrorMessagesTest implements WithAssertions {
       currentDir = '/' + currentDir.replace('\\', '/');
     }
 
-    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(FILE);
+    currentDir = currentDir.replace(" ", "%20"); //the screenshot path uses %20 instead of the space character
+
+    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(OutputType.FILE);
 
     String screenshot = ErrorMessages.screenshot(driver);
     assertThat(screenshot)
-      .startsWith("\nScreenshot: file:" + currentDir + "/build/reports/tests/")
+      .startsWith(String.format("%nScreenshot: file:%s/build/reports/tests/", currentDir))
       .endsWith(".png");
   }
 
@@ -108,12 +110,12 @@ class ErrorMessagesTest implements WithAssertions {
     config.savePageSource(true);
     config.reportsUrl("http://ci.mycompany.com/job/666/artifact/");
     doReturn("<html>blah</html>").when(webDriver).getPageSource();
-    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(FILE);
+    doReturn(new File("src/test/resources/screenshot.png")).when(webDriver).getScreenshotAs(OutputType.FILE);
 
     String screenshot = ErrorMessages.screenshot(driver);
     assertThat(screenshot)
-      .startsWith("\nScreenshot: http://ci.mycompany.com/job/666/artifact/build/reports/tests/")
-      .contains(".png\nPage source: http://ci.mycompany.com/job/666/artifact/build/reports/tests/")
+      .startsWith(String.format("%nScreenshot: http://ci.mycompany.com/job/666/artifact/build/reports/tests/"))
+      .contains(String.format(".png%nPage source: http://ci.mycompany.com/job/666/artifact/build/reports/tests/"))
       .endsWith(".html");
   }
 }

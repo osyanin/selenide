@@ -6,7 +6,6 @@ import integration.IntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +13,11 @@ import java.util.List;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.WebDriverRunner.closeWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.getSelenideProxy;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ProxyServerUsageTest extends IntegrationTest {
-  private List<String> requests = new ArrayList<>();
-  private List<String> responses = new ArrayList<>();
+  private final List<String> requests = new ArrayList<>();
+  private final List<String> responses = new ArrayList<>();
 
   @BeforeEach
   @AfterEach
@@ -27,7 +27,6 @@ class ProxyServerUsageTest extends IntegrationTest {
   }
 
   @Test
-  @DisabledIfSystemProperty(named = "selenide.browser", matches = "chrome")
   void canAddInterceptorsToProxyServer() {
     openFile("file_upload_form.html");
 
@@ -36,6 +35,7 @@ class ProxyServerUsageTest extends IntegrationTest {
     selenideProxy.addRequestFilter("proxy-usages.request", (request, contents, messageInfo) -> {
       String url = messageInfo.getUrl();
       if (!isBrowserOwnTechnicalRequest(url)) {
+        request.headers().add("User-Agent", "hacker");
         requests.add(url + "\n\n" + contents.getTextContents());
       }
       return null;
@@ -51,7 +51,7 @@ class ProxyServerUsageTest extends IntegrationTest {
     $("#submit").click();
 
     assertThat(getSelenideProxy().getProxy())
-      .as("Check browser mob proxy instance")
+      .as("Check browser up proxy instance")
       .isNotNull();
 
     assertThat(requests)

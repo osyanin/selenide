@@ -1,7 +1,5 @@
 package integration;
 
-import java.util.List;
-
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.ElementsContainer;
@@ -13,11 +11,15 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.ui.Select;
 
+import java.util.List;
+
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
+import static com.codeborne.selenide.Configuration.timeout;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.page;
-import static com.codeborne.selenide.Selenide.sleep;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PageObjectTest extends IntegrationTest {
   private SelectsPage pageWithSelects;
@@ -25,7 +27,6 @@ class PageObjectTest extends IntegrationTest {
   @BeforeEach
   void openTestPage() {
     openFile("page_with_selects_without_jquery.html");
-    sleep(100);
     pageWithSelects = page(SelectsPage.class);
   }
 
@@ -64,6 +65,7 @@ class PageObjectTest extends IntegrationTest {
 
   @Test
   void canInjectSelenideElement() {
+    timeout = 4000;
     pageWithSelects.h1.shouldHave(Condition.text("Page with selects"));
     pageWithSelects.dynamicContent.shouldHave(text("dynamic content"));
   }

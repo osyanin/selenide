@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
-import static com.codeborne.selenide.Selenide.close;
+import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static org.mockito.Mockito.mock;
 
 class WebDriverThreadLocalContainerTest implements WithAssertions {
@@ -19,6 +19,7 @@ class WebDriverThreadLocalContainerTest implements WithAssertions {
   @BeforeEach
   void mockWebDriver() {
     WebDriverRunner.setProxy(null);
+    Configuration.holdBrowserOpen = false;
     Configuration.reopenBrowserOnFail = true;
     Configuration.browserSize = null;
     Configuration.startMaximized = false;
@@ -27,6 +28,7 @@ class WebDriverThreadLocalContainerTest implements WithAssertions {
 
   @AfterEach
   void resetSetting() {
+    Configuration.holdBrowserOpen = false;
     Configuration.reopenBrowserOnFail = true;
     Configuration.browser = "firefox";
   }
@@ -34,7 +36,7 @@ class WebDriverThreadLocalContainerTest implements WithAssertions {
   @AfterEach
   void tearDown() {
     WebDriverRunner.setProxy(null);
-    close();
+    closeWebDriver();
   }
 
   @Test
@@ -53,12 +55,6 @@ class WebDriverThreadLocalContainerTest implements WithAssertions {
 
   @Test
   void hasWebDriverStarted_false_ifNoDriverBoundToCurrentThread() {
-    assertThat(container.hasWebDriverStarted()).isFalse();
-  }
-
-  @Test
-  void hasWebDriverStarted_false_ifDriverIsBoundToCurrentThread_butBrowserIsNotOpened() {
-    assertThat(container.getSelenideDriver()).isNotNull();
     assertThat(container.hasWebDriverStarted()).isFalse();
   }
 
@@ -82,6 +78,28 @@ class WebDriverThreadLocalContainerTest implements WithAssertions {
     container.closeWebDriver();
 
     assertThat(container.hasWebDriverStarted()).isFalse();
+  }
+
+  @Test
+  void holdsAllBrowsers_toAutomaticallyCloseThem() {
+    WebDriver webDriver = container.getAndCheckWebDriver();
+
+    assertThat(webDriver).isNotNull();
+    assertThat(container.allWebDriverThreads).hasSize(1);
+    assertThat(container.threadWebDriver).hasSize(1);
+    assertThat(container.threadWebDriver.get(container.allWebDriverThreads.iterator().next().getId())).isSameAs(webDriver);
+    assertThat(container.cleanupThreadStarted.get()).isTrue();
+  }
+
+  @Test
+  void doesNotCloseBrowsers_ifHoldBrowserOpenSettingIsTrue() {
+    Configuration.holdBrowserOpen = true;
+
+    WebDriver webDriver = container.getAndCheckWebDriver();
+
+    assertThat(webDriver).isNotNull();
+    assertThat(container.allWebDriverThreads).hasSize(0);
+    assertThat(container.cleanupThreadStarted.get()).isFalse();
   }
 
   private static class DummyProvider implements WebDriverProvider {

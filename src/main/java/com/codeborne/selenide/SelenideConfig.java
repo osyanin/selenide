@@ -1,6 +1,7 @@
 package com.codeborne.selenide;
 
 import com.codeborne.selenide.impl.CiReportUrl;
+import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import static com.codeborne.selenide.AssertionMode.STRICT;
@@ -19,7 +20,7 @@ public class SelenideConfig implements Config {
   private boolean driverManagerEnabled = Boolean.parseBoolean(System.getProperty("selenide.driverManagerEnabled", "true"));
   private String browserBinary = System.getProperty("selenide.browserBinary", "");
   private String pageLoadStrategy = System.getProperty("selenide.pageLoadStrategy", "normal");
-  private DesiredCapabilities browserCapabilities = new DesiredCapabilities();
+  private MutableCapabilities browserCapabilities = new DesiredCapabilities();
 
   private String baseUrl = System.getProperty("selenide.baseUrl", "http://localhost:8080");
   private long timeout = Long.parseLong(System.getProperty("selenide.timeout", "4000"));
@@ -31,11 +32,12 @@ public class SelenideConfig implements Config {
 
   private boolean savePageSource = Boolean.parseBoolean(System.getProperty("selenide.savePageSource", "true"));
   private String reportsFolder = System.getProperty("selenide.reportsFolder", "build/reports/tests");
+  private String downloadsFolder = System.getProperty("selenide.downloadsFolder", "build/downloads");
   private String reportsUrl = new CiReportUrl().getReportsUrl(System.getProperty("selenide.reportsUrl"));
   private boolean fastSetValue = Boolean.parseBoolean(System.getProperty("selenide.fastSetValue", "false"));
   private boolean versatileSetValue = Boolean.parseBoolean(System.getProperty("selenide.versatileSetValue", "false"));
-  private SelectorMode selectorMode = CSS;
-  private AssertionMode assertionMode = STRICT;
+  private SelectorMode selectorMode = SelectorMode.valueOf(System.getProperty("selenide.selectorMode", CSS.name()));
+  private AssertionMode assertionMode = AssertionMode.valueOf(System.getProperty("selenide.assertionMode", STRICT.name()));
   private FileDownloadMode fileDownload = FileDownloadMode.valueOf(System.getProperty("selenide.fileDownload", HTTPGET.name()));
   private boolean proxyEnabled = Boolean.parseBoolean(System.getProperty("selenide.proxyEnabled", "false"));
   private String proxyHost = System.getProperty("selenide.proxyHost", "");
@@ -128,6 +130,16 @@ public class SelenideConfig implements Config {
 
   public SelenideConfig reportsFolder(String reportsFolder) {
     this.reportsFolder = reportsFolder;
+    return this;
+  }
+
+  @Override
+  public String downloadsFolder() {
+    return downloadsFolder;
+  }
+
+  public SelenideConfig downloadsFolder(String downloadsFolder) {
+    this.downloadsFolder = downloadsFolder;
     return this;
   }
 
@@ -322,7 +334,7 @@ public class SelenideConfig implements Config {
   }
 
   @Override
-  public DesiredCapabilities browserCapabilities() {
+  public MutableCapabilities browserCapabilities() {
     return browserCapabilities;
   }
 

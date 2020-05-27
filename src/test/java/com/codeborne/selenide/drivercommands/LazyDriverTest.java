@@ -3,19 +3,11 @@ package com.codeborne.selenide.drivercommands;
 import com.codeborne.selenide.Config;
 import com.codeborne.selenide.webdriver.WebDriverFactory;
 import org.assertj.core.api.WithAssertions;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 
-import java.io.ByteArrayOutputStream;
-import java.io.OutputStream;
-import java.util.logging.Handler;
-import java.util.logging.Logger;
-import java.util.logging.StreamHandler;
-
-import static java.lang.Thread.currentThread;
 import static java.util.Collections.emptyList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -26,32 +18,19 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class LazyDriverTest implements WithAssertions {
-  private static final Logger log = Logger.getLogger(CloseDriverCommand.class.getName());
-
-  private static OutputStream logCapturingStream;
-  private static StreamHandler customLogHandler;
-
   private Config config = mock(Config.class);
   private WebDriver webdriver = mock(WebDriver.class);
   private WebDriverFactory factory = mock(WebDriverFactory.class);
   private BrowserHealthChecker browserHealthChecker = mock(BrowserHealthChecker.class);
+  private CreateDriverCommand createDriverCommand = new CreateDriverCommand();
+  private CloseDriverCommand closeDriverCommand = new CloseDriverCommand();
   private LazyDriver driver;
 
   @BeforeEach
   void mockLogging() {
     when(config.reopenBrowserOnFail()).thenReturn(true);
     when(config.proxyEnabled()).thenReturn(true);
-    driver = new LazyDriver(config, null, emptyList(), factory, browserHealthChecker);
-
-    logCapturingStream = new ByteArrayOutputStream();
-    Handler[] handlers = log.getParent().getHandlers();
-    customLogHandler = new StreamHandler(logCapturingStream, handlers[0].getFormatter());
-    log.addHandler(customLogHandler);
-  }
-
-  @AfterEach
-  void undoLoggingMock() {
-    log.removeHandler(customLogHandler);
+    driver = new LazyDriver(config, null, emptyList(), factory, browserHealthChecker, createDriverCommand, closeDriverCommand);
   }
 
   @BeforeEach
@@ -117,21 +96,17 @@ class LazyDriverTest implements WithAssertions {
   }
 
   @Test
-  void closeWebDriverLoggingWhenProxyIsAdded() {
+  void closeWebDriver() {
     when(config.holdBrowserOpen()).thenReturn(false);
     when(config.proxyEnabled()).thenReturn(true);
 
-    driver = new LazyDriver(config, mockProxy("selenide:0"), emptyList(), factory, browserHealthChecker);
+    driver = new LazyDriver(config, mockProxy("selenide:0"), emptyList(),
+      factory, browserHealthChecker, createDriverCommand, closeDriverCommand);
     givenOpenedBrowser();
 
     driver.close();
 
-    String capturedLog = getTestCapturedLog();
-    String currentThreadId = String.valueOf(currentThread().getId());
-    assertThat(capturedLog)
-      .contains(String.format("Close webdriver: %s -> %s", currentThreadId, webdriver.toString()));
-    assertThat(capturedLog)
-      .contains(String.format("Close proxy server: %s ->", currentThreadId));
+    assertThat(driver.hasWebDriverStarted()).isFalse();
   }
 
   private Proxy mockProxy(String httpProxy) {
@@ -142,10 +117,5 @@ class LazyDriverTest implements WithAssertions {
 
   private void givenOpenedBrowser() {
     assertThat(driver.getAndCheckWebDriver()).isSameAs(webdriver);
-  }
-
-  private static String getTestCapturedLog() {
-    customLogHandler.flush();
-    return logCapturingStream.toString();
   }
 }

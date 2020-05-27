@@ -1,6 +1,6 @@
 package com.codeborne.selenide;
 
-import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.MutableCapabilities;
 
 /**
  * Configuration settings for Selenide default browser
@@ -12,7 +12,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  *
  * <p>
  *   These system properties can be additonally used having effect on every new created browser in test.
- *   For example as -D<property>=<value> in command-line
+ *   For example as -D&lt;property&gt;=&lt;value&gt; in command-line
  * </p>
  * <p>
  *  <b>chromeoptions.args</b> - Sets the arguments for chrome options, parameters are comma separated
@@ -22,7 +22,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  *  Example: --no-sandbox,--disable-3d-apis,"--user-agent=Firefox 45, Mozilla"
  * </p>
  * <p>
- *  <b>chromeoptions.prefs</b> - ser the preferences for chrome options, which are comma separated
+ *  <b>chromeoptions.prefs</b> - Sets the preferences for chrome options, which are comma separated
  *   keyX=valueX preferences. If comma is a part of the value, use double quotes around the preference
  *   List of preferences can be found at
  *   https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc
@@ -31,7 +31,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
  * </p>
  */
 public class Configuration {
-  private static SelenideConfig defaults = new SelenideConfig();
+  private static final SelenideConfig defaults = new SelenideConfig();
 
   /**
    * Base url for open() function calls
@@ -79,7 +79,7 @@ public class Configuration {
   /**
    * Which browser to use.
    * Can be configured either programmatically or by system property "-Dselenide.browser=ie".
-   * Supported values: "chrome", "firefox", "legacy_firefox", "ie", "htmlunit", "phantomjs", "opera", "safari", "edge", "jbrowser"
+   * Supported values: "chrome", "firefox", "legacy_firefox" (upto ESR 52), "ie", "opera", "edge"
    * <br>
    * Default value: "chrome"
    */
@@ -131,7 +131,7 @@ public class Configuration {
    * <br>
    * Default value: DesiredCapabilities::new
    */
-  public static DesiredCapabilities browserCapabilities = defaults.browserCapabilities();
+  public static MutableCapabilities browserCapabilities = defaults.browserCapabilities();
 
   /**
    * Should webdriver wait until page is completely loaded.
@@ -187,6 +187,14 @@ public class Configuration {
    */
   public static String reportsFolder = defaults.reportsFolder();
 
+    /**
+   * Folder to store downloaded files to.
+   * Can be configured either programmatically or by system property "-Dselenide.downloadsFolder=test-result/downloads".
+   * <br>
+   * Default value: "build/downloads" (this is default for Gradle projects)
+   */
+  public static String downloadsFolder = defaults.downloadsFolder();
+
   /**
    * Optional: URL of CI server where reports are published to.
    * In case of Jenkins, it is "BUILD_URL/artifact" by default.
@@ -230,13 +238,29 @@ public class Configuration {
   public static boolean versatileSetValue = defaults.versatileSetValue();
 
   /**
-   * Choose how Selenide should retrieve web elements: using default CSS or Sizzle (CSS3)
+   * <p>Choose how Selenide should retrieve web elements: using default CSS or Sizzle (CSS3).</p>
+   * <br>
+   * <p>
+   * Can be configured either programmatically or by system property "-Dselenide.selectorMode=Sizzle".
+   * </p>
+   * <br>
+   *   Possible values: "CSS" or "Sizzle"
+   * <br>
+   *   Default value: CSS
+   *
+   * @see SelectorMode
    */
   public static SelectorMode selectorMode = defaults.selectorMode();
 
   /**
-   * Assertion mode - STRICT or SOFT Asserts
-   * Default value: STRICT
+   * <p>Assertion mode</p>
+   *
+   * <p>Can be configured either programmatically or by system property "-Dselenide.assertionMode=SOFT".</p>
+   *
+   * <br>
+   *   Possible values: "STRICT" or "SOFT"
+   * <br>
+   *   Default value: STRICT
    *
    * @see AssertionMode
    */
@@ -265,11 +289,11 @@ public class Configuration {
   /**
    * Host of Selenide proxy server.
    * Used only if proxyEnabled == true.
-   * Can be configured either programmatically or by system property "-DproxyHost=127.0.0.1"
+   * Can be configured either programmatically or by system property "-Dselenide.proxyHost=127.0.0.1"
    * <br>
    * Default: empty (meaning that Selenide will detect current machine's ip/hostname automatically)
    *
-   * @see net.lightbody.bmp.client.ClientUtil#getConnectableAddress()
+   * @see com.browserup.bup.client.ClientUtil#getConnectableAddress()
    */
   public static String proxyHost = defaults.proxyHost();
 

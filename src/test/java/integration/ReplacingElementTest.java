@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import static com.codeborne.selenide.CollectionCondition.empty;
 import static com.codeborne.selenide.Condition.cssClass;
 import static com.codeborne.selenide.Condition.value;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class ReplacingElementTest extends ITest {
   @BeforeEach
@@ -16,11 +17,13 @@ class ReplacingElementTest extends ITest {
 
   @Test
   void shouldWaitsUntilElementIsReplaced() {
-    $("#dynamic-element").shouldHave(value("I will be replaced soon"));
+    withLongTimeout(() -> {
+      $("#dynamic-element").shouldHave(value("I will be replaced soon"));
 
-    driver().executeJavaScript("replaceElement()");
-    $("#dynamic-element").shouldHave(value("Hello, I am back"), cssClass("reloaded"));
-    $("#dynamic-element").setValue("New value");
+      driver().executeJavaScript("replaceElement()");
+      $("#dynamic-element").shouldHave(value("Hello, I am back"), cssClass("reloaded"));
+      $("#dynamic-element").setValue("New value");
+    });
   }
 
   @Test

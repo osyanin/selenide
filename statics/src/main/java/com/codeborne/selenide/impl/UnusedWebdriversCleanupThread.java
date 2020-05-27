@@ -1,20 +1,25 @@
 package com.codeborne.selenide.impl;
 
-import com.codeborne.selenide.SelenideDriver;
+import com.codeborne.selenide.proxy.SelenideProxyServer;
+import org.openqa.selenium.WebDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.logging.Logger;
 
 class UnusedWebdriversCleanupThread extends Thread {
-  private static final Logger log = Logger.getLogger(UnusedWebdriversCleanupThread.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(UnusedWebdriversCleanupThread.class);
 
   private final Collection<Thread> allWebDriverThreads;
-  private final Map<Long, SelenideDriver> threadWebDriver;
+  private final Map<Long, WebDriver> threadWebDriver;
+  private final Map<Long, SelenideProxyServer> threadProxyServer;
 
-  UnusedWebdriversCleanupThread(Collection<Thread> allWebDriverThreads, Map<Long, SelenideDriver> threadWebDriver) {
+  UnusedWebdriversCleanupThread(Collection<Thread> allWebDriverThreads, Map<Long, WebDriver> threadWebDriver,
+                                Map<Long, SelenideProxyServer> threadProxyServer) {
     this.allWebDriverThreads = allWebDriverThreads;
     this.threadWebDriver = threadWebDriver;
+    this.threadProxyServer = threadProxyServer;
     setDaemon(true);
     setName("Webdrivers killer thread");
   }
@@ -36,7 +41,7 @@ class UnusedWebdriversCleanupThread extends Thread {
   private void closeUnusedWebdrivers() {
     for (Thread thread : allWebDriverThreads) {
       if (!thread.isAlive()) {
-        log.info("Thread " + thread.getId() + " is dead. Let's close webdriver " + threadWebDriver.get(thread.getId()));
+        log.info("Thread {} is dead. Let's close webdriver {}", thread.getId(), threadWebDriver.get(thread.getId()));
         closeWebDriver(thread);
       }
     }
@@ -44,13 +49,18 @@ class UnusedWebdriversCleanupThread extends Thread {
 
   private void closeWebDriver(Thread thread) {
     allWebDriverThreads.remove(thread);
-    SelenideDriver selenideDriver = threadWebDriver.remove(thread.getId());
+    WebDriver driver = threadWebDriver.remove(thread.getId());
 
-    if (selenideDriver == null) {
-      log.info("No webdriver found for thread : " + thread.getId() + " - nothing to close");
+    if (driver == null) {
+      log.info("No webdriver found for thread: {} - nothing to close", thread.getId());
     }
     else {
-      selenideDriver.close();
+      driver.quit();
+    }
+
+    SelenideProxyServer proxy = threadProxyServer.remove(thread.getId());
+    if (proxy != null) {
+      proxy.shutdown();
     }
   }
 }

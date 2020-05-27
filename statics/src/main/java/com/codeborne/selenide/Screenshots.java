@@ -6,11 +6,12 @@ import org.openqa.selenium.WebElement;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import static com.codeborne.selenide.WebDriverRunner.driver;
 
 public class Screenshots {
-  public static ScreenShotLaboratory screenshots = new ScreenShotLaboratory();
+  public static ScreenShotLaboratory screenshots = ScreenShotLaboratory.getInstance();
 
   public static String takeScreenShot(String className, String methodName) {
     return screenshots.takeScreenShot(driver(), className, methodName);
@@ -77,9 +78,30 @@ public class Screenshots {
 
   /**
    * Get the last screenshot taken
+   *
    * @return null if there were no any screenshots taken
    */
   public static File getLastScreenshot() {
     return screenshots.getLastScreenshot();
+  }
+
+  /**
+   * Get the last screenshot taken in current thread
+   *
+   * @return {@link java.util.Optional} with screenshot of current thread,
+   * or an empty Optional if there were no any screenshots taken.
+   */
+  public static Optional<File> getLastThreadScreenshot() {
+    return screenshots.getLastThreadScreenshot();
+  }
+
+  /**
+   * Get the last screenshot taken in current {@code context} thread
+   *
+   * @return {@link java.util.Optional} with screenshot of current {@code context} thread,
+   * or an empty Optional if there were no any screenshots taken.
+   */
+  public static Optional<File> getLastContextScreenshot() {
+    return screenshots.getLastContextScreenshot();
   }
 }

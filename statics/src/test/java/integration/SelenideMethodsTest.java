@@ -1,10 +1,14 @@
 package integration;
 
+import com.codeborne.selenide.Command;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.Selenide;
+import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.ex.ElementNotFound;
 import com.codeborne.selenide.ex.ElementShould;
 import com.codeborne.selenide.ex.ElementShouldNot;
+import com.codeborne.selenide.impl.WebElementSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
@@ -51,13 +55,21 @@ import static com.codeborne.selenide.Selenide.title;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.isChrome;
 import static com.codeborne.selenide.WebDriverRunner.isFirefox;
-import static com.codeborne.selenide.WebDriverRunner.isHtmlUnit;
 import static com.codeborne.selenide.WebDriverRunner.url;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 
 class SelenideMethodsTest extends IntegrationTest {
   @BeforeEach
   void openTestPageWithJQuery() {
     openFile("page_with_selects_without_jquery.html");
+  }
+
+  @Test
+  void canOpenBlankPage() {
+    open("about:blank");
+    $("body").shouldHave(exactText(""));
   }
 
   @Test
@@ -121,18 +133,10 @@ class SelenideMethodsTest extends IntegrationTest {
     assertThat($("h2").innerHtml())
       .isEqualTo("Dropdown list");
 
-    if (isHtmlUnit()) {
-      assertThat($("#baskerville").innerHtml().trim())
-        .isEqualTo("<span></span> L'a\n      Baskerville");
-      assertThat($("#status").innerHtml().trim())
-        .isEqualTo("Username: <span class=\"name\">Bob Smith</span> Last login: <span class=\"last-login\">01.01.1970</span>");
-    }
-    else {
-      assertThat($("#baskerville").innerHtml().trim())
-        .isEqualTo("<span></span> L'a\n      Baskerville");
-      assertThat($("#status").innerHtml().trim())
-        .isEqualTo("Username: <span class=\"name\">Bob Smith</span>&nbsp;Last login: <span class=\"last-login\">01.01.1970</span>");
-    }
+    assertThat($("#baskerville").innerHtml().trim())
+      .isEqualTo("<span></span> L'a\n      Baskerville");
+    assertThat($("#status").innerHtml().trim())
+      .isEqualTo("Username: <span class=\"name\">Bob Smith</span>&nbsp;Last login: <span class=\"last-login\">01.01.1970</span>");
   }
 
   @Test
@@ -208,8 +212,8 @@ class SelenideMethodsTest extends IntegrationTest {
     $("#username").sendKeys(" x ");
     $("#username").pressTab();
 
-    if (!isHtmlUnit() && !isChrome() && !isFirefox()) {
-      // fails in HtmlUnit and Chrome for unknown reason. In Firefox, it's just unstable.
+    if (!isChrome() && !isFirefox()) {
+      // fails in Chrome for unknown reason. In Firefox, it's just unstable.
       $("#password").shouldBe(focused);
       $("#username-mirror").shouldHave(text(" x "));
       $("#username-blur-counter").shouldHave(text("blur: "));
@@ -224,14 +228,8 @@ class SelenideMethodsTest extends IntegrationTest {
       .isEqualTo("Dropdown list");
     assertThat($(By.name("domain")).find("option").text())
       .isEqualTo("@livemail.ru");
-    if (isHtmlUnit()) {
-      assertThat($("#radioButtons").text())
-        .isEqualTo("Radio buttons\nuncheckedМастер uncheckedМаргарита uncheckedКот \"Бегемот\" uncheckedTheodor Woland");
-    }
-    else {
-      assertThat($("#radioButtons").text())
-        .isEqualTo("Radio buttons\nМастер Маргарита Кот \"Бегемот\" Theodor Woland");
-    }
+    assertThat($("#radioButtons").text())
+      .isEqualTo("Radio buttons\nМастер Маргарита Кот \"Бегемот\" Theodor Woland");
 
     $("h1").shouldHave(text("Page "));
     $("h2").shouldHave(text("Dropdown list"));
@@ -244,18 +242,13 @@ class SelenideMethodsTest extends IntegrationTest {
     $("h1").shouldHave(exactText("Page with selects"));
     $("h2").shouldHave(exactText("Dropdown list"));
     $(By.name("domain")).find("option").shouldHave(text("@livemail.ru"));
-    if (isHtmlUnit()) {
-      $("#radioButtons").shouldHave(text("Radio buttons\n" +
-        "uncheckedМастер uncheckedМаргарита uncheckedКот \"Бегемот\" uncheckedTheodor Woland"));
-    }
-    else {
-      $("#radioButtons").shouldHave(text("Radio buttons\n" +
-        "Мастер Маргарита Кот \"Бегемот\" Theodor Woland"));
-    }
+    $("#radioButtons").shouldHave(text("Radio buttons\n" +
+      "Мастер Маргарита Кот \"Бегемот\" Theodor Woland"));
   }
 
   @Test
   void elementIsEmptyIfTextAndValueAreBothEmpty() {
+    timeout = 4000;
     $("br").shouldBe(empty);
     $("h2").shouldNotBe(empty);
     $(By.name("password")).shouldBe(empty);
@@ -401,11 +394,13 @@ class SelenideMethodsTest extends IntegrationTest {
 
   @Test
   void findWaitsUntilParentAppears() {
+    timeout = 4000;
     $("#container").find("#dynamic-content2").shouldBe(visible);
   }
 
   @Test
   void findWaitsUntilElementMatchesCondition() {
+    timeout = 4000;
     $("#dynamic-content-container").find("#dynamic-content2").shouldBe(visible);
   }
 
@@ -437,8 +432,8 @@ class SelenideMethodsTest extends IntegrationTest {
 
     $("#login").contextClick().click();
 
-    $(By.name("domain")).find("option").click();
-    $(By.name("domain")).find("option").contextClick();
+    $(By.name("domain")).click();
+    $(By.name("domain")).contextClick();
   }
 
   @Test
@@ -462,8 +457,6 @@ class SelenideMethodsTest extends IntegrationTest {
 
   @Test
   void shouldMethodsMayContainOptionalMessageThatIsPartOfErrorMessage_1() {
-    timeout = 100L;
-
     assertThatThrownBy(() -> $("h1").should(text("Some wrong test").because("it's wrong text")))
       .isInstanceOf(ElementShould.class)
       .hasMessageContaining("because it's wrong text");
@@ -471,8 +464,6 @@ class SelenideMethodsTest extends IntegrationTest {
 
   @Test
   void shouldMethodsMayContainOptionalMessageThatIsPartOfErrorMessage_2() {
-    timeout = 100L;
-
     assertThatThrownBy(() -> $("h1").shouldHave(text("Some wrong test").because("it's wrong text")))
       .isInstanceOf(ElementShould.class)
       .hasMessageContaining("because it's wrong text");
@@ -480,8 +471,6 @@ class SelenideMethodsTest extends IntegrationTest {
 
   @Test
   void shouldMethodsMayContainOptionalMessageThatIsPartOfErrorMessage_3() {
-    timeout = 100L;
-
     assertThatThrownBy(() -> $("h1").shouldBe(text("Some wrong test").because("it's wrong text")))
       .isInstanceOf(ElementShould.class)
       .hasMessageContaining("because it's wrong text");
@@ -489,8 +478,6 @@ class SelenideMethodsTest extends IntegrationTest {
 
   @Test
   void shouldNotMethodsMayContainOptionalMessageThatIsPartOfErrorMessage() {
-    timeout = 100L;
-
     assertThatThrownBy(() -> $("h1").shouldNot(text("Page with selects").because("it's wrong text")))
       .isInstanceOf(ElementShouldNot.class)
       .hasMessageContaining("because it's wrong text");
@@ -561,5 +548,57 @@ class SelenideMethodsTest extends IntegrationTest {
     elements("[name='me']").shouldHave(size(4));
     elements(By.cssSelector("[name='me']")).shouldHave(size(4));
     elements(getWebDriver().findElements(By.cssSelector("[name='me']"))).shouldHave(size(4));
+  }
+
+  @Test
+  void canExecuteCustomCommand() {
+    $("#username").setValue("value");
+    Replace replace = Replace.withValue("custom value");
+    Command<Void> doubleClick = new DoubleClick();
+    $("#username").scrollTo().execute(replace).pressEnter().execute(doubleClick);
+    String mirrorText = $("#username-mirror").text();
+    assertThat(mirrorText).startsWith("custom value");
+  }
+
+  @Test
+  void canExecuteJavascript() {
+    long value = (Long) Selenide.executeJavaScript("return 10;");
+    assertThat(value).isEqualTo(10);
+  }
+
+  @Test
+  void canExecuteAsyncJavascript() {
+    long value = Selenide.executeAsyncJavaScript(
+      "var callback = arguments[arguments.length - 1]; setTimeout(function() { callback(10); }, 50);"
+    );
+    assertThat(value).isEqualTo(10);
+  }
+
+  static class DoubleClick implements Command<Void> {
+    @Override
+    public Void execute(SelenideElement proxy, WebElementSource locator, Object[] args) {
+      locator.driver().actions().doubleClick(locator.findAndAssertElementIsInteractable()).perform();
+      return null;
+
+    }
+  }
+
+  static class Replace implements Command<SelenideElement> {
+    private final String replacement;
+
+    Replace(String replacement) {
+      this.replacement = replacement;
+    }
+
+    public static Replace withValue(String value) {
+      return new Replace(value);
+    }
+
+    @Override
+    public SelenideElement execute(SelenideElement proxy, WebElementSource locator, Object[] args) {
+      proxy.clear();
+      proxy.sendKeys(replacement);
+      return proxy;
+    }
   }
 }

@@ -1,20 +1,19 @@
 package com.codeborne.selenide.logevents;
 
-import java.lang.reflect.Field;
-import java.util.List;
-
 import com.codeborne.selenide.ex.SoftAssertionError;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.StaleElementReferenceException;
 
+import java.lang.reflect.Field;
+import java.util.List;
+
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ErrorsCollectorTest implements WithAssertions {
   private ErrorsCollector errorsCollector;
-  private LogEvent mockedLogEvent = mock(LogEvent.class);
   private LogEvent mockedInProgressEvent = mock(LogEvent.class);
   private LogEvent mockedPassedEvent = mock(LogEvent.class);
   private LogEvent mockedFailedEvent = mock(LogEvent.class);
@@ -37,15 +36,15 @@ class ErrorsCollectorTest implements WithAssertions {
   void testOnEvent() throws IllegalAccessException {
     List<Throwable> errors = (List<Throwable>) errorsField.get(errorsCollector);
 
-    errorsCollector.onEvent(mockedInProgressEvent);
+    errorsCollector.afterEvent(mockedInProgressEvent);
     assertThat(errors)
       .hasSize(0);
 
-    errorsCollector.onEvent(mockedPassedEvent);
+    errorsCollector.afterEvent(mockedPassedEvent);
     assertThat(errors)
       .hasSize(0);
 
-    errorsCollector.onEvent(mockedFailedEvent);
+    errorsCollector.afterEvent(mockedFailedEvent);
     assertThat(errors)
       .hasSize(1);
     Throwable error = errors.get(0);
@@ -59,9 +58,9 @@ class ErrorsCollectorTest implements WithAssertions {
   void testClearMethod() throws IllegalAccessException {
     List<Throwable> errors = (List<Throwable>) errorsField.get(errorsCollector);
 
-    errorsCollector.onEvent(mockedFailedEvent);
-    errorsCollector.onEvent(mockedFailedEvent);
-    errorsCollector.onEvent(mockedFailedEvent);
+    errorsCollector.afterEvent(mockedFailedEvent);
+    errorsCollector.afterEvent(mockedFailedEvent);
+    errorsCollector.afterEvent(mockedFailedEvent);
 
     assertThat(errors)
       .hasSize(3);
@@ -73,7 +72,7 @@ class ErrorsCollectorTest implements WithAssertions {
 
   @Test
   void testFailIfErrorMethodWhenOnlyOneError() {
-    errorsCollector.onEvent(mockedFailedEvent);
+    errorsCollector.afterEvent(mockedFailedEvent);
     try {
       errorsCollector.failIfErrors(defaultTestName);
     } catch (SoftAssertionError error) {
@@ -90,8 +89,8 @@ class ErrorsCollectorTest implements WithAssertions {
     when(mockedFailedEvent2.getStatus()).thenReturn(LogEvent.EventStatus.FAIL);
     when(mockedFailedEvent2.getError()).thenReturn(new StaleElementReferenceException(failedEvent2Message));
 
-    errorsCollector.onEvent(mockedFailedEvent);
-    errorsCollector.onEvent(mockedFailedEvent2);
+    errorsCollector.afterEvent(mockedFailedEvent);
+    errorsCollector.afterEvent(mockedFailedEvent2);
     try {
       errorsCollector.failIfErrors(defaultTestName);
     } catch (SoftAssertionError error) {

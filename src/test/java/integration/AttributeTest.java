@@ -5,11 +5,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Condition.attribute;
+import static com.codeborne.selenide.Condition.attributeMatching;
 import static com.codeborne.selenide.Selectors.by;
 import static com.codeborne.selenide.Selectors.byAttribute;
 import static com.codeborne.selenide.Selectors.byText;
 import static com.codeborne.selenide.Selectors.byTitle;
 import static com.codeborne.selenide.Selectors.byValue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AttributeTest extends ITest {
   @BeforeEach
@@ -21,6 +23,13 @@ public class AttributeTest extends ITest {
   void canVerifyAttributeExistence() {
     $("#domain-container").shouldHave(attribute("class"));
     $("#domain-container").shouldNotHave(attribute("foo"));
+  }
+
+  @Test
+  void canVerifyAttributeMatching() {
+    $("#domain-container").shouldHave(attributeMatching("class", "contain.*"));
+    $("#domain-container").shouldNotHave(attributeMatching("class", ".*another.*"));
+    $("#domain-container").shouldNotHave(attributeMatching("foo", ".*contain.*"));
   }
 
   @Test
@@ -76,7 +85,7 @@ public class AttributeTest extends ITest {
 
   @Test
   void userCanSearchElementByDataAttribute() {
-    Assumptions.assumeFalse(browser().isChrome() || browser().isHtmlUnit() || browser().isPhantomjs());
+    Assumptions.assumeFalse(browser().isChrome());
 
     assertThat($(by("data-mailServerId", "111")).data("mailServerId"))
       .isEqualTo("111");

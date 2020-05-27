@@ -3,24 +3,61 @@ package com.codeborne.selenide.junit5;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Screenshots;
 import com.codeborne.selenide.ex.UIAssertionError;
-import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.util.Optional;
-import java.util.logging.Logger;
 
 import static com.codeborne.selenide.WebDriverRunner.driver;
 import static com.codeborne.selenide.ex.ErrorMessages.screenshot;
 
 /**
+ * Use this class to automatically take screenshots in case of ANY errors in tests (not only Selenide errors).
+ * <p>
+ * How to use in Java:
+ * <pre>
+ *   {@code @ExtendWith({ScreenShooterExtension.class})}
+ *    public class MyTest {...}
+ * </pre>
+ * <p>
+ * How to use in Java (with customization):
+ * <pre>
+ *   public class MyTest {
+ *    {@code @RegisterExtension}
+ *     static ScreenShooterExtension screenshotEmAll = new ScreenShooterExtension(true);
+ *     ...
+ *   }
+ * </pre>
+ * <p>
+ * How to use in Kotlin:
+ *
+ * <pre>
+ *    {@code @ExtendWith(ScreenShooterExtension::class)}
+ *     public class MyTest {...}
+ * </pre>
+ * <p>
+ * How to use in Kotlin (with customization):
+ *
+ * <pre>
+ *   public class MyTest {
+ *     companion object {
+ *      {@code @JvmField}
+ *      {@code @RegisterExtension}
+ *       val screenshotEmAll: ScreenShooterExtension = ScreenShooterExtension(true);
+ *     }
+ *     ...
+ *   }
+ * </pre>
+ *
  * @author Aliaksandr Rasolka
  * @since 4.12.2
  */
-public class ScreenShooterExtension implements BeforeAllCallback, AfterEachCallback, AfterAllCallback {
-  private static final Logger log = Logger.getLogger(ScreenShooterExtension.class.getName());
+public class ScreenShooterExtension implements BeforeEachCallback, AfterEachCallback {
+  private static final Logger log = LoggerFactory.getLogger(ScreenShooterExtension.class);
 
   private final boolean captureSuccessfulTests;
 
@@ -39,7 +76,6 @@ public class ScreenShooterExtension implements BeforeAllCallback, AfterEachCallb
    * One-liner to configure Configuration.reportsFolder property.
    *
    * @param folderWithScreenshots Folder to put screenshots to
-   *
    * @return current extension instance
    */
   public ScreenShooterExtension to(final String folderWithScreenshots) {
@@ -48,15 +84,13 @@ public class ScreenShooterExtension implements BeforeAllCallback, AfterEachCallb
   }
 
   @Override
-  public void beforeAll(final ExtensionContext context) {
+  public void beforeEach(final ExtensionContext context) {
     final Optional<Class<?>> testClass = context.getTestClass();
-    final String className = testClass.isPresent()
-      ? testClass.get().getName()
-      : "EmptyClass";
+    final String className = testClass.map(Class::getName).orElse("EmptyClass");
+
     final Optional<Method> testMethod = context.getTestMethod();
-    final String methodName = testMethod.isPresent()
-      ? testMethod.get().getName()
-      : "emptyMethod";
+    final String methodName = testMethod.map(Method::getName).orElse("emptyMethod");
+
     Screenshots.startContext(className, methodName);
   }
 
@@ -65,15 +99,12 @@ public class ScreenShooterExtension implements BeforeAllCallback, AfterEachCallb
     if (captureSuccessfulTests) {
       log.info(screenshot(driver()));
     } else {
-      final Optional<Throwable> executionException = context.getExecutionException();
-      if (executionException.isPresent() && executionException.get() instanceof UIAssertionError) {
-        log.info(screenshot(driver()));
-      }
+      context.getExecutionException().ifPresent(error -> {
+        if (!(error instanceof UIAssertionError)) {
+          log.info(screenshot(driver()));
+        }
+      });
     }
-  }
-
-  @Override
-  public void afterAll(final ExtensionContext context) {
     Screenshots.finishContext();
   }
 }

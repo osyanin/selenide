@@ -7,14 +7,15 @@ import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.events.EventFiringWebDriver;
 import org.openqa.selenium.support.events.WebDriverEventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import static java.lang.Thread.currentThread;
 
 public class CreateDriverCommand {
-  private static final Logger log = Logger.getLogger(CreateDriverCommand.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(CreateDriverCommand.class);
 
   public Result createDriver(Config config,
                              WebDriverFactory factory,
@@ -30,17 +31,24 @@ public class CreateDriverCommand {
     Proxy browserProxy = userProvidedProxy;
 
     if (config.proxyEnabled()) {
-      selenideProxyServer = new SelenideProxyServer(config, userProvidedProxy);
-      selenideProxyServer.start();
-      browserProxy = selenideProxyServer.createSeleniumProxy();
+      try {
+        selenideProxyServer = new SelenideProxyServer(config, userProvidedProxy);
+        selenideProxyServer.start();
+        browserProxy = selenideProxyServer.createSeleniumProxy();
+      }
+      catch (NoClassDefFoundError e) {
+        throw new IllegalStateException("Cannot initialize proxy. " +
+          "Probably you should add BrowserUpProxy dependency to your project.", e);
+      }
     }
 
     WebDriver webdriver = factory.createWebDriver(config, browserProxy);
 
-    log.info("Create webdriver in current thread " + currentThread().getId() + ": " +
-      webdriver.getClass().getSimpleName() + " -> " + webdriver);
+    log.info("Create webdriver in current thread {}: {} -> {}",
+      currentThread().getId(), webdriver.getClass().getSimpleName(), webdriver);
 
     WebDriver webDriver = addListeners(webdriver, listeners);
+    Runtime.getRuntime().addShutdownHook(new SelenideDriverFinalCleanupThread(config, webDriver, selenideProxyServer));
     return new Result(webDriver, selenideProxyServer);
   }
 
@@ -51,7 +59,7 @@ public class CreateDriverCommand {
 
     EventFiringWebDriver wrapper = new EventFiringWebDriver(webdriver);
     for (WebDriverEventListener listener : listeners) {
-      log.info("Add listener to webdriver: " + listener);
+      log.info("Add listener to webdriver: {}", listener);
       wrapper.register(listener);
     }
     return wrapper;

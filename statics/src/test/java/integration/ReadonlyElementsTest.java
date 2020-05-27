@@ -14,17 +14,22 @@ import java.util.List;
 
 import static com.codeborne.selenide.Condition.empty;
 import static com.codeborne.selenide.Condition.exactValue;
+import static com.codeborne.selenide.Condition.readonly;
 import static com.codeborne.selenide.Condition.selected;
-import static com.codeborne.selenide.Configuration.timeout;
 import static com.codeborne.selenide.Selenide.$;
+import static org.assertj.core.api.Assertions.anyOf;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 
 class ReadonlyElementsTest extends IntegrationTest {
   @BeforeEach
   void openTestPage() {
     openFile("page_with_readonly_elements.html");
-    timeout = 10 * averageSeleniumCommandDuration;
+    Configuration.timeout = 1000;
   }
 
+  @BeforeEach
   @AfterEach
   void cleanUp() {
     Configuration.fastSetValue = false;
@@ -36,6 +41,7 @@ class ReadonlyElementsTest extends IntegrationTest {
       "Element is read-only and so may not be used for actions",
       "Element must be user-editable in order to clear it",
       "You may only edit editable elements",
+      "Invalid element state: invalid element state",
       "Element is read-only: <input name=\"username\">"
     );
 
@@ -70,6 +76,7 @@ class ReadonlyElementsTest extends IntegrationTest {
       "You may only edit editable elements",
       "You may only interact with enabled elements",
       "Element is not currently interactable and may not be manipulated",
+      "Invalid element state: invalid element state: Element is not currently interactable and may not be manipulated",
       "Element is disabled");
 
     Configuration.fastSetValue = false;
@@ -181,5 +188,11 @@ class ReadonlyElementsTest extends IntegrationTest {
     $("#enable-inputs").click();
     $(By.name("me")).selectRadio("margarita");
     $(Selectors.byValue("margarita")).shouldBe(selected);
+  }
+
+  @Test
+  void readonlyAttributeIsShownInErrorMessage() {
+    assertThatThrownBy(() -> $(By.name("username")).shouldNotHave(readonly))
+      .hasMessageMatching("(?s).*<input.*readonly.*");
   }
 }

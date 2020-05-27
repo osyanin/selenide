@@ -6,44 +6,41 @@ import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebElement;
 
+import static com.codeborne.selenide.Mocks.mockCollection;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class SizeNotEqualTest implements WithAssertions {
   @Test
-  void testApplyWithEmptyList() {
-    assertThat(new SizeNotEqual(10).apply(emptyList()))
+  void applyWithEmptyList() {
+    assertThat(new SizeNotEqual(10).test(emptyList()))
       .isTrue();
   }
 
   @Test
-  void testApplyWithWrongSizeList() {
-    assertThat(new SizeNotEqual(10).apply(singletonList(mock(WebElement.class))))
+  void applyWithWrongSizeList() {
+    assertThat(new SizeNotEqual(10).test(singletonList(mock(WebElement.class))))
       .isTrue();
   }
 
   @Test
-  void testApplyWithCorrectSizeNotEqual() {
-    assertThat(new SizeNotEqual(1).apply(singletonList(mock(WebElement.class))))
+  void applyWithCorrectSizeNotEqual() {
+    assertThat(new SizeNotEqual(1).test(singletonList(mock(WebElement.class))))
       .isFalse();
   }
 
   @Test
-  void testFailMethod() {
-    WebElementsCollection mockedWebElementCollection = mock(WebElementsCollection.class);
-    when(mockedWebElementCollection.description()).thenReturn("Collection description");
+  void failMethod() {
+    WebElementsCollection collection = mockCollection("Collection description");
 
-    try {
-      new SizeNotEqual(10).fail(mockedWebElementCollection,
-        emptyList(),
-        new Exception("Exception message"),
-        10000);
-    } catch (ListSizeMismatch ex) {
-      assertThat(ex)
-        .hasMessage(": expected: <> 10, actual: 0, collection: Collection description\nElements: []");
-    }
+    assertThatThrownBy(() -> new SizeNotEqual(10).fail(collection,
+      emptyList(),
+      new Exception("Exception message"),
+      10000))
+      .isInstanceOf(ListSizeMismatch.class)
+      .hasMessageStartingWith(
+        String.format("List size mismatch: expected: <> 10, actual: 0, collection: Collection description%nElements: []"));
   }
 
   @Test

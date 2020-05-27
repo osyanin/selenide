@@ -6,12 +6,13 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Condition.name;
 import static com.codeborne.selenide.Condition.text;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class FrameWaitTest extends ITest {
   @BeforeEach
   void setUp() {
     openFile("page_with_frames_with_delays.html");
+    setTimeout(2000);
   }
 
   @Test
@@ -31,8 +32,6 @@ class FrameWaitTest extends ITest {
   @Test
   @Video
   void waitsUntilFrameAppears_byIndex() {
-    assumeFalse(browser().isHtmlUnit());
-
     switchTo().frame(2);
 
     $("h1").shouldHave(text("Page with JQuery"));

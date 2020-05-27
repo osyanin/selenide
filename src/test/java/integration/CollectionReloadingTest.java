@@ -1,7 +1,6 @@
 package integration;
 
 import com.codeborne.selenide.ElementsCollection;
-import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -13,12 +12,11 @@ class CollectionReloadingTest extends ITest {
   @BeforeEach
   void openTestPage() {
     openFile("collection_with_delays.html");
+    setTimeout(4000);
   }
 
   @Test
   void reloadsCollectionOnEveryCall() {
-    Assumptions.assumeFalse(browser().isPhantomjs());
-
     ElementsCollection collection = $$("#collection li");
     collection.get(0).shouldHave(text("Element #0"));
     collection.get(10).shouldHave(text("Element #10"));

@@ -1,30 +1,31 @@
 package com.codeborne.selenide.impl;
 
-import com.codeborne.selenide.SelenideConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class CiReportUrl {
-  private static final Logger LOG = Logger.getLogger(SelenideConfig.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(CiReportUrl.class);
 
   public String getReportsUrl(String reportsUrl) {
     if (!isEmpty(reportsUrl)) {
-      LOG.config("Using variable selenide.reportsUrl=" + reportsUrl);
+      log.debug("Using variable selenide.reportsUrl={}", reportsUrl);
       return resolveUrlSource(reportsUrl);
     }
     reportsUrl = getJenkinsReportsUrl();
     if (!isEmpty(reportsUrl)) {
-      LOG.config("Using Jenkins BUILD_URL: " + reportsUrl);
+      log.debug("Using Jenkins BUILD_URL: {}", reportsUrl);
       return reportsUrl;
     }
     reportsUrl = getTeamCityUrl();
     if (!isEmpty(reportsUrl)) {
-      LOG.config("Using Teamcity artifacts url: " + reportsUrl);
+      log.debug("Using Teamcity artifacts url: {}", reportsUrl);
       return reportsUrl;
     }
-    LOG.config("Variable selenide.reportsUrl not found");
+    log.debug("Variable selenide.reportsUrl not found");
     return reportsUrl;
   }
 
@@ -41,7 +42,15 @@ public class CiReportUrl {
   private String getJenkinsReportsUrl() {
     String build_url = System.getProperty("BUILD_URL");
     if (!isEmpty(build_url)) {
-      return resolveUrlSource("%s/artifact/", build_url);
+      String workspace = System.getProperty("WORKSPACE", System.getenv("WORKSPACE"));
+      String reportRelativePath = "";
+      if (!isEmpty(workspace)) { // we have a workspace folder. Calculate the report relative path
+        Path pathAbsoluteReportsFolder = Paths.get("").normalize().toAbsolutePath();
+        Path pathAbsoluteWorkSpace = Paths.get(workspace).normalize().toAbsolutePath();
+        Path pathRelative = pathAbsoluteWorkSpace.relativize(pathAbsoluteReportsFolder);
+        reportRelativePath = pathRelative.toString().replace('\\', '/') + '/';
+      }
+      return resolveUrlSource("%s/artifact/%s", build_url, reportRelativePath);
     } else {
       return null;
     }
@@ -54,7 +63,7 @@ public class CiReportUrl {
     try {
       return new URI(base).normalize().toURL().toString();
     } catch (Exception e) {
-      LOG.log(Level.ALL, "Variable selenide.reportsUrl is incorrect: " + base, e);
+      log.error("Variable selenide.reportsUrl is incorrect: {}", base, e);
       return null;
     }
   }

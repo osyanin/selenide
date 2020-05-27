@@ -5,6 +5,9 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.interactions.Actions;
 
+/**
+ * A dummy `Driver` implementation used in tests.
+ */
 public class DriverStub implements Driver {
   private final Config config;
   private final Browser browser;
@@ -70,6 +73,12 @@ public class DriverStub implements Driver {
   @SuppressWarnings("unchecked")
   public <T> T executeJavaScript(String jsCode, Object... arguments) {
     return (T) ((JavascriptExecutor) webDriver).executeScript(jsCode, arguments);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T> T executeAsyncJavaScript(String jsCode, Object... arguments) {
+    return (T) ((JavascriptExecutor) webDriver).executeAsyncScript(jsCode, arguments);
   }
 
   @Override

@@ -11,9 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.InvalidSelectorException;
 
 import static com.codeborne.selenide.CollectionCondition.exactTexts;
-import static com.codeborne.selenide.Condition.*;
+import static com.codeborne.selenide.Condition.cssClass;
+import static com.codeborne.selenide.Condition.exactTextCaseSensitive;
+import static com.codeborne.selenide.Condition.exist;
+import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 @Disabled
 class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest {
@@ -43,9 +48,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo - need to fix
         /*
@@ -74,9 +80,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo - need to fix
         /*
@@ -105,9 +112,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo - need to fix
         /*
@@ -135,9 +143,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo  - need to fix
         /*
@@ -165,9 +174,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo  - need to fix
         /*
@@ -195,9 +205,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo  - need to fix
         /*
@@ -225,9 +236,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
     //todo - need to fix
         /*
@@ -256,9 +268,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
         /*
             org.openqa.selenium.InvalidSelectorException:
@@ -286,9 +299,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
         /*
             org.openqa.selenium.InvalidSelectorException:
@@ -316,9 +330,10 @@ class MethodCalledOnEntityWithInvalidLocatorFailsOnTest extends IntegrationTest 
       assertThat(expected.getCause())
         .isInstanceOf(InvalidSelectorException.class);
       assertThat(expected.getCause())
-        .hasMessageStartingWith("The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
-          "The following error occurred:\n" +
-          "InvalidSelectorError: An invalid or illegal selector was specified");
+        .hasMessageStartingWith(String.format(
+          "The given selector ##invalid-locator is either invalid or does not result in a WebElement. " +
+          "The following error occurred:%n" +
+          "InvalidSelectorError: An invalid or illegal selector was specified"));
     }
         /*
             org.openqa.selenium.InvalidSelectorException:

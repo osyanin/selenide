@@ -22,7 +22,7 @@ class ConditionTest {
   void displaysHumanReadableName() {
     assertThat(visible).hasToString("visible");
     assertThat(hidden).hasToString("hidden");
-    assertThat(attribute("lastName", "Malkovich")).hasToString("attribute lastName=Malkovich");
+    assertThat(attribute("lastName", "Malkovich")).hasToString("attribute lastName=\"Malkovich\"");
   }
 
   @Test
@@ -176,6 +176,14 @@ class ConditionTest {
   }
 
   @Test
+  void elementHasAttributeMatching() {
+    assertThat(attributeMatching("name", "selenide").apply(driver, elementWithAttribute("name", "selenide"))).isTrue();
+    assertThat(attributeMatching("name", "selenide.*").apply(driver, elementWithAttribute("name", "selenide is great"))).isTrue();
+    assertThat(attributeMatching("name", "selenide.*").apply(driver, elementWithAttribute("id", "selenide"))).isFalse();
+    assertThat(attributeMatching("name", "value.*").apply(driver, elementWithAttribute("name", "another value"))).isFalse();
+  }
+
+  @Test
   void elementHasValue() {
     assertThat(Condition.value("selenide").apply(driver, elementWithAttribute("value", "selenide"))).isTrue();
     assertThat(Condition.value("selenide").apply(driver, elementWithAttribute("value", "selenide is great"))).isTrue();
@@ -218,6 +226,8 @@ class ConditionTest {
     assertThat(cssClass("btn").apply(driver, elementWithAttribute("class", "btn btn-warning"))).isTrue();
     assertThat(cssClass("btn-warning").apply(driver, elementWithAttribute("class", "btn btn-warning"))).isTrue();
     assertThat(cssClass("active").apply(driver, elementWithAttribute("class", "btn btn-warning"))).isFalse();
+    assertThat(cssClass("").apply(driver, elementWithAttribute("class", "btn btn-warning active"))).isFalse();
+    assertThat(cssClass("active").apply(driver, elementWithAttribute("href", "no-class"))).isFalse();
   }
 
   @Test
@@ -358,18 +368,16 @@ class ConditionTest {
   void elementOrConditionActualValue() {
     WebElement element = elementWithSelectedAndText(false, "text");
     Condition condition = or("selected with text", be(selected), have(text("text")));
-    assertThat(condition.actualValue(driver, element)).isNullOrEmpty();
+    assertThat(condition.actualValue(driver, element)).isEqualTo("false, null");
     assertThat(condition.apply(driver, element)).isTrue();
-    assertThat(condition.actualValue(driver, element)).isEqualTo("false");
   }
 
   @Test
   void elementOrConditionToString() {
     WebElement element = elementWithSelectedAndText(false, "text");
     Condition condition = or("selected with text", be(selected), have(text("text")));
-    assertThat(condition).hasToString("selected with text");
+    assertThat(condition).hasToString("selected with text: be selected or have text 'text'");
     assertThat(condition.apply(driver, element)).isTrue();
-    assertThat(condition).hasToString("be selected");
   }
 
   @Test

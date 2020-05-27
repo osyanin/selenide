@@ -6,19 +6,16 @@ import com.codeborne.selenide.impl.Describe;
 import org.openqa.selenium.WebElement;
 
 import static com.codeborne.selenide.ex.ErrorMessages.actualValue;
+import static java.lang.System.lineSeparator;
 
 public class ElementShouldNot extends UIAssertionError {
-  public ElementShouldNot(Driver driver, String searchCriteria, String prefix, String message, Condition expectedCondition,
+  public ElementShouldNot(Driver driver, String searchCriteria, String prefix, Condition expectedCondition,
                           WebElement element, Throwable lastError) {
     super(driver,
-      "Element should not " + prefix + expectedCondition + " {" + searchCriteria + '}' +
-        (message != null ? " because " + message : "") +
-        "\nElement: '" + Describe.describe(driver, element) + '\'' +
-        actualValue(expectedCondition, driver, element), lastError);
-  }
-
-  @Override
-  public String toString() {
-    return getMessage() + uiDetails();
+      String.format("Element should not %s%s {%s}%sElement: '%s'%s",
+        prefix, expectedCondition, searchCriteria, lineSeparator(),
+        Describe.describe(driver, element),
+        actualValue(expectedCondition, driver, element)
+      ), lastError);
   }
 }

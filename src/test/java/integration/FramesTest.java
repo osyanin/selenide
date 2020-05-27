@@ -6,6 +6,8 @@ import org.openqa.selenium.NoSuchFrameException;
 
 import static com.codeborne.selenide.Condition.name;
 import static com.codeborne.selenide.Condition.text;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 class FramesTest extends ITest {
@@ -84,7 +86,6 @@ class FramesTest extends ITest {
 
   @Test
   void throwsNoSuchFrameExceptionWhenSwitchingToAbsentFrameByElement() {
-    assumeFalse(browser().isHtmlUnit());
     assertThat(driver().title()).isEqualTo("Test::frames");
 
     assertThatThrownBy(() -> {

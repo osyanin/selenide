@@ -2,7 +2,7 @@ package integration;
 
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.ex.TextsMismatch;
-import org.assertj.core.api.Assertions;
+import com.codeborne.selenide.ex.TextsSizeMismatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,33 +11,35 @@ import static com.codeborne.selenide.CollectionCondition.texts;
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.$$;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CollectionWaitTest extends IntegrationTest {
   @BeforeEach
   void openTestPage() {
     openFile("collection_with_delays.html");
+    Configuration.timeout = 1000;
   }
 
   @Test
   void waitsUntilNthElementAppears() {
     $$("#collection li").get(5).shouldBe(visible);
-    $$("#collection li").get(33).shouldBe(visible);
-    $$("#collection li").get(49).shouldBe(visible);
+    $$("#collection li").get(13).shouldBe(visible);
+    $$("#collection li").get(19).shouldBe(visible);
 
     $$("#collection li").first().shouldBe(visible).shouldHave(text("Element #0"));
-    $$("#collection li").last().shouldBe(visible).shouldHave(text("Element #49"));
+    $$("#collection li").last().shouldBe(visible).shouldHave(text("Element #19"));
   }
 
   @Test
   void failsIfWrongSize() {
     assertThatThrownBy(() -> $$("#collection li").shouldHave(size(-1)))
       .isInstanceOf(AssertionError.class)
-      .hasMessageContaining("expected: = -1, actual: 50, collection: #collection li");
+      .hasMessageContaining("expected: = -1, actual: 20, collection: #collection li");
   }
 
   @Test
   void canDetermineSize() {
-    $$("#collection li").shouldHave(size(50));
+    $$("#collection li").shouldHave(size(20));
   }
 
   @Test
@@ -47,32 +49,39 @@ class CollectionWaitTest extends IntegrationTest {
 
   @Test
   void waitsUntilLastNElementsGetLoaded() {
-    $$("#collection li").last(2).shouldHave(texts("Element #48", "Element #49"));
+    $$("#collection li").last(2).shouldHave(texts("Element #18", "Element #19"));
   }
 
   @Test
-  void firstNElements_errorMessage() {
-    Configuration.timeout = 4000;
-    Assertions.assertThatThrownBy(() -> $$("#collection li").first(2).shouldHave(texts("Element #wrong")))
+  void firstNElements_TextsMismatchErrorMessage() {
+    assertThatThrownBy(() -> $$("#collection li").first(2).shouldHave(texts("Element", "#wrong")))
       .isInstanceOf(TextsMismatch.class)
-      .hasMessageContaining("Actual: [Element #0, Element #1]\n" +
-        "Expected: [Element #wrong]\n" +
-        "Collection: #collection li.first(2)");
+      .hasMessageContaining(String.format("Actual: [Element #0, Element #1]%n" +
+        "Expected: [Element, #wrong]%n" +
+        "Collection: #collection li.first(2)"));
+  }
+
+  @Test
+  void firstNElements_TextsSizeMismatchErrorMessage() {
+    assertThatThrownBy(() -> $$("#collection li").first(2).shouldHave(texts("Element #wrong")))
+      .isInstanceOf(TextsSizeMismatch.class)
+      .hasMessageContaining(String.format("Actual: [Element #0, Element #1], List size: 2%n" +
+        "Expected: [Element #wrong], List size: 1%n" +
+        "Collection: #collection li.first(2)"));
   }
 
   @Test
   void lastNElements_errorMessage() {
-    Configuration.timeout = 4000;
-    Assertions.assertThatThrownBy(() -> $$("#collection li").last(2).shouldHave(texts("Element #wrong")))
+    assertThatThrownBy(() -> $$("#collection li").last(2).shouldHave(texts("Element", "#wrong")))
       .isInstanceOf(TextsMismatch.class)
-      .hasMessageContaining("Actual: [Element #48, Element #49]\n" +
-        "Expected: [Element #wrong]\n" +
-        "Collection: #collection li.last(2)");
+      .hasMessageContaining(String.format("Actual: [Element #18, Element #19]%n" +
+        "Expected: [Element, #wrong]%n" +
+        "Collection: #collection li.last(2)"));
   }
 
   @Test
   void customTimeoutForCollections() {
     Configuration.timeout = 1;
-    $$("#collection li").last(2).shouldHave(texts("Element #48", "Element #49"), 5000);
+    $$("#collection li").last(2).shouldHave(texts("Element #18", "Element #19"), 5000);
   }
 }

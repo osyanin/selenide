@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <title>Test::collection with delays</title>
+  <meta charset="UTF-8">
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <script type="text/javascript">
       var totalTime = new Date();
@@ -10,8 +11,8 @@
         document.getElementById('collection').innerHTML += '<li>Element #' + size + '</li>';
         size++;
 
-        if (size < 50) {
-          setTimeout(growCollection, 50);
+        if (size < 20) {
+          setTimeout(growCollection, 20);
         }
         else {
           document.getElementById('status').innerHTML += "Generated in " + (new Date() - totalTime) / 1000.0 + " seconds";

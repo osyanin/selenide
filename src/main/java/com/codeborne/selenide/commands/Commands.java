@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Commands {
   private static Commands collection;
 
-  private final Map<String, Command> commands = new ConcurrentHashMap<>(128);
+  private final Map<String, Command<?>> commands = new ConcurrentHashMap<>(128);
 
   public static synchronized Commands getInstance() {
     if (collection == null) {
@@ -43,6 +43,7 @@ public class Commands {
     add("screenshot", new TakeScreenshot());
     add("screenshotAsImage", new TakeScreenshotAsImage());
     add("getSearchCriteria", new GetSearchCriteria());
+    add("execute", new Execute<>());
   }
 
   private void addActionsCommands() {
@@ -54,6 +55,8 @@ public class Commands {
 
   private void addInfoCommands() {
     add("attr", new GetAttribute());
+    add("getAttribute", new GetAttribute());
+    add("getCssValue", new GetCssValue());
     add("data", new GetDataAttribute());
     add("exists", new Exists());
     add("innerText", new GetInnerText());
@@ -66,6 +69,7 @@ public class Commands {
     add("name", new GetName());
     add("text", new GetText());
     add("getValue", new GetValue());
+    add("pseudo", new GetPseudoValue());
   }
 
   private void addClickCommands() {
@@ -91,6 +95,8 @@ public class Commands {
     add("$$x", new FindAllByXpath());
     add("closest", new GetClosest());
     add("parent", new GetParent());
+    add("sibling", new GetSibling());
+    add("preceding", new GetPreceding());
     add("lastChild", new GetLastChild());
   }
 
@@ -130,14 +136,14 @@ public class Commands {
     add("waitUntil", new ShouldBe());
   }
 
-  public void add(String method, Command command) {
+  public void add(String method, Command<?> command) {
     commands.put(method, command);
   }
 
   @SuppressWarnings("unchecked")
   public <T> T execute(Object proxy, WebElementSource webElementSource, String methodName, Object[] args)
       throws IOException {
-    Command command = commands.get(methodName);
+    Command<?> command = commands.get(methodName);
     if (command == null) {
       throw new IllegalArgumentException("Unknown Selenide method: " + methodName);
     }

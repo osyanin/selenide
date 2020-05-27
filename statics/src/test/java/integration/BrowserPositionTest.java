@@ -6,9 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Point;
 
-import static com.codeborne.selenide.Selenide.close;
+import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.isHeadless;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 class BrowserPositionTest extends IntegrationTest {
@@ -16,7 +17,7 @@ class BrowserPositionTest extends IntegrationTest {
   @AfterEach
   void closeBrowser() {
     assumeFalse(isHeadless());
-    close();
+    closeWebDriver();
   }
 
   @Test

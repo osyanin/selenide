@@ -7,6 +7,7 @@ import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebElement;
 
+import static java.lang.System.lineSeparator;
 import static org.mockito.Mockito.mock;
 
 class ElementShouldTest implements WithAssertions {
@@ -18,12 +19,13 @@ class ElementShouldTest implements WithAssertions {
     WebElement webElementMock = mock(WebElement.class);
     Exception exception = new Exception("Error message");
     ElementShould elementShould = new ElementShould(driver, searchCriteria, prefix, Condition.appear, webElementMock, exception);
-    String expectedString = "Element should be visible {by.name: selenide}\n" +
-      "Element: '<null displayed:false></null>'\n" +
-      "Screenshot: null\n" +
-      "Timeout: 0 ms.\n" +
-      "Caused by: java.lang.Exception: Error message";
+
     assertThat(elementShould)
-      .hasToString(expectedString);
+      .hasMessage("Element should be visible {by.name: selenide}" + lineSeparator() +
+        "Element: '<null displayed:false></null>'" + lineSeparator() +
+        "Actual value: visible:false" + lineSeparator() +
+        "Screenshot: null" + lineSeparator() +
+        "Timeout: 0 ms." + lineSeparator() +
+        "Caused by: java.lang.Exception: Error message");
   }
 }

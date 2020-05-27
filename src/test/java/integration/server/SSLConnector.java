@@ -25,9 +25,9 @@ public class SSLConnector extends ServerConnector {
   }
 
   private static SslContextFactory createSslContextFactory() {
-    SslContextFactory sslContextFactory = new SslContextFactory();
+    SslContextFactory sslContextFactory = new SslContextFactory.Server();
 
-    // created with "keytool -genkey -alias test.selenide.org -keyalg RSA -keystore test-selenide.jks -keysize 2048"
+    // created with "keytool -genkey -alias test.selenide.org -keyalg RSA -keystore src/test/resources/test-selenide.jks"
     sslContextFactory.setKeyStorePath(SSLConnector.class.getResource("/test-selenide.jks").toExternalForm());
     sslContextFactory.setKeyStorePassword("selenide.rulez");
     sslContextFactory.setKeyManagerPassword("selenide.rulez");

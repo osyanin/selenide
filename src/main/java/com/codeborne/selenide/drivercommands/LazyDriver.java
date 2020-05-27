@@ -8,19 +8,26 @@ import com.codeborne.selenide.webdriver.WebDriverFactory;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.events.WebDriverEventListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import static java.lang.Thread.currentThread;
 
+/**
+ * A `Driver` implementation which opens browser on demand (on a first call).
+ * May be created with its own config, proxy and listeners.
+ */
 public class LazyDriver implements Driver {
-  private static final Logger log = Logger.getLogger(LazyDriver.class.getName());
+  private static final Logger log = LoggerFactory.getLogger(LazyDriver.class);
 
   private final Config config;
   private final BrowserHealthChecker browserHealthChecker;
   private final WebDriverFactory factory;
+  private final CloseDriverCommand closeDriverCommand;
+  private final CreateDriverCommand createDriverCommand;
   private final Proxy userProvidedProxy;
   private final List<WebDriverEventListener> listeners = new ArrayList<>();
   private final Browser browser;
@@ -30,17 +37,21 @@ public class LazyDriver implements Driver {
   private SelenideProxyServer selenideProxyServer;
 
   public LazyDriver(Config config, Proxy userProvidedProxy, List<WebDriverEventListener> listeners) {
-    this(config, userProvidedProxy, listeners, new WebDriverFactory(), new BrowserHealthChecker());
+    this(config, userProvidedProxy, listeners, new WebDriverFactory(), new BrowserHealthChecker(),
+      new CreateDriverCommand(), new CloseDriverCommand());
   }
 
   LazyDriver(Config config, Proxy userProvidedProxy, List<WebDriverEventListener> listeners,
-             WebDriverFactory factory, BrowserHealthChecker browserHealthChecker) {
+             WebDriverFactory factory, BrowserHealthChecker browserHealthChecker,
+             CreateDriverCommand createDriverCommand, CloseDriverCommand closeDriverCommand) {
     this.config = config;
     this.browser = new Browser(config.browser(), config.headless());
     this.userProvidedProxy = userProvidedProxy;
     this.listeners.addAll(listeners);
     this.factory = factory;
     this.browserHealthChecker = browserHealthChecker;
+    this.closeDriverCommand = closeDriverCommand;
+    this.createDriverCommand = createDriverCommand;
   }
 
   @Override
@@ -83,27 +94,24 @@ public class LazyDriver implements Driver {
       createDriver();
     }
     else if (webDriver == null) {
-      log.info("No webdriver is bound to current thread: " + currentThread().getId() + " - let's create a new webdriver");
+      log.info("No webdriver is bound to current thread: {} - let's create a new webdriver", currentThread().getId());
       createDriver();
     }
     return getWebDriver();
   }
 
   void createDriver() {
-    CreateDriverCommand.Result result = new CreateDriverCommand().createDriver(config, factory, userProvidedProxy, listeners);
+    CreateDriverCommand.Result result = createDriverCommand.createDriver(config, factory, userProvidedProxy, listeners);
     this.webDriver = result.webDriver;
     this.selenideProxyServer = result.selenideProxyServer;
     this.closed = false;
-    Runtime.getRuntime().addShutdownHook(new SelenideDriverFinalCleanupThread(this));
   }
 
   @Override
   public void close() {
-    if (!config.holdBrowserOpen()) {
-      new CloseDriverCommand(webDriver, selenideProxyServer).run();
-      webDriver = null;
-      selenideProxyServer = null;
-      closed = true;
-    }
+    closeDriverCommand.closeAsync(config, webDriver, selenideProxyServer);
+    webDriver = null;
+    selenideProxyServer = null;
+    closed = true;
   }
 }

@@ -8,19 +8,25 @@ import java.util.List;
 
 import static com.codeborne.selenide.AssertionMode.SOFT;
 import static com.codeborne.selenide.logevents.LogEvent.EventStatus.FAIL;
+import static java.lang.System.lineSeparator;
 
 public class ErrorsCollector implements LogEventListener {
   public static final String LISTENER_SOFT_ASSERT = "softAssert";
-  
+
   private final List<Throwable> errors = new ArrayList<>();
 
   @Override
-  public void onEvent(LogEvent event) {
+  public void afterEvent(LogEvent event) {
     if (event.getStatus() == FAIL) {
       errors.add(event.getError());
     }
   }
-  
+
+  @Override
+  public void beforeEvent(LogEvent currentLog) {
+    // ignore
+  }
+
   public void clear() {
     errors.clear();
   }
@@ -31,13 +37,13 @@ public class ErrorsCollector implements LogEventListener {
     }
     if (!errors.isEmpty()) {
       StringBuilder sb = new StringBuilder();
-      sb.append("Test ").append(testName).append(" failed.\n");
-      sb.append(errors.size()).append(" checks failed\n");
+      sb.append("Test ").append(testName).append(" failed.").append(lineSeparator());
+      sb.append(errors.size()).append(" checks failed").append(lineSeparator());
 
       int i = 0;
       for (Throwable error : errors) {
-        sb.append("\nFAIL #").append(++i).append(": ");
-        sb.append(error).append('\n');
+        sb.append(lineSeparator()).append("FAIL #").append(++i).append(": ");
+        sb.append(error).append(lineSeparator());
       }
       throw new SoftAssertionError(sb.toString());
     }
@@ -46,7 +52,8 @@ public class ErrorsCollector implements LogEventListener {
   public static void validateAssertionMode(Config config) {
     if (config.assertionMode() == SOFT) {
       if (!SelenideLogger.hasListener(LISTENER_SOFT_ASSERT)) {
-        throw new IllegalStateException("Using soft asserts, but without @SoftAsserts annotation");
+        throw new IllegalStateException("You must configure you classes using JUnit4/JUnit5/TestNG " +
+          "mechanism as documented in https://github.com/selenide/selenide/wiki/SoftAssertions");
       }
     }
   }

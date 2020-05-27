@@ -6,8 +6,10 @@ import com.codeborne.selenide.impl.Html;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
 public class Text extends Condition {
   protected final String text;
   public Text(final String text) {
@@ -34,6 +36,6 @@ public class Text extends Condition {
 
   @Override
   public String toString() {
-    return name + " '" + text + '\'';
+    return String.format("%s '%s'", getName(), text);
   }
 }

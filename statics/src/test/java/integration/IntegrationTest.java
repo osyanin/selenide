@@ -4,14 +4,16 @@ import com.automation.remarks.junit5.VideoExtension;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.junit5.ScreenShooterExtension;
-import com.codeborne.selenide.junit5.TextReportExtension;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.openqa.selenium.MutableCapabilities;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 
-import static com.codeborne.selenide.Browsers.*;
+import static com.codeborne.selenide.Browsers.CHROME;
 import static com.codeborne.selenide.Configuration.browserSize;
 import static com.codeborne.selenide.Configuration.clickViaJs;
 import static com.codeborne.selenide.Configuration.fastSetValue;
@@ -23,14 +25,11 @@ import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.WebDriverRunner.closeWebDriver;
 import static com.codeborne.selenide.WebDriverRunner.isIE;
-import static com.codeborne.selenide.WebDriverRunner.isPhantomjs;
-import static com.codeborne.selenide.WebDriverRunner.isSafari;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.openqa.selenium.remote.CapabilityType.ACCEPT_INSECURE_CERTS;
+import static org.openqa.selenium.remote.CapabilityType.ACCEPT_SSL_CERTS;
 
-@ExtendWith({ScreenShooterExtension.class, TextReportExtension.class, VideoExtension.class})
+@ExtendWith({ScreenShooterExtension.class, VideoExtension.class})
 public abstract class IntegrationTest extends BaseIntegrationTest {
-  private long defaultTimeout;
-
   @BeforeAll
   static void resetSettingsBeforeClass() {
     resetSettings();
@@ -39,24 +38,23 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
   @BeforeEach
   final void setUpEach() {
     resetSettings();
-    restartReallyUnstableBrowsers();
-    rememberTimeout();
   }
 
   @AfterEach
   public void restoreDefaultProperties() {
-    timeout = defaultTimeout;
+    timeout = 1;
     clickViaJs = false;
   }
 
   @AfterAll
   public static void restartUnstableWebdriver() {
-    if (isIE() || isPhantomjs()) {
+    if (isIE()) {
       closeWebDriver();
     }
   }
 
   private static void resetSettings() {
+    timeout = 1;
     Configuration.browser = System.getProperty("selenide.browser", CHROME);
     Configuration.baseUrl = getBaseUrl();
     Configuration.headless = Boolean.parseBoolean(System.getProperty("selenide.headless", "false"));
@@ -66,17 +64,7 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
     browserSize = System.getProperty("selenide.browserSize", "1200x960");
     Configuration.proxyPort = 0;
     Configuration.proxyHost = "";
-    useProxy(!isPhantomjs());
-  }
-
-  private void restartReallyUnstableBrowsers() {
-    if (isSafari()) {
-      closeWebDriver();
-    }
-  }
-
-  private void rememberTimeout() {
-    defaultTimeout = timeout;
+    useProxy(true);
   }
 
   protected void openFile(String fileName) {
@@ -84,7 +72,7 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
       "&timeout=" + timeout);
   }
 
-  <T> T openFile(String fileName, Class<T> pageObjectClass) {
+  protected <T> T openFile(String fileName, Class<T> pageObjectClass) {
     return open("/" + fileName + "?browser=" + browser +
       "&timeout=" + timeout, pageObjectClass);
   }
@@ -95,12 +83,8 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
    * @param proxyEnabled true - turn on, false - turn off
    */
   protected static void useProxy(boolean proxyEnabled) {
-    if (proxyEnabled) {
-      assumeFalse(isPhantomjs()); // I don't know why, but PhantomJS seems to ignore proxy
-    }
-
     if (Configuration.proxyEnabled != proxyEnabled) {
-      Selenide.close();
+      Selenide.closeWebDriver();
     }
     Configuration.proxyEnabled = proxyEnabled;
     Configuration.fileDownload = proxyEnabled ? PROXY : HTTPGET;
@@ -112,5 +96,25 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
       "document.querySelector('body').innerHTML = arguments[0];",
       String.join(" ", html)
     );
+  }
+
+  protected static <T extends MutableCapabilities> T addSslErrorIgnoreCapabilities(T options) {
+    addSslErrorIgnoreOptions(options);
+    return options;
+  }
+
+  protected static ChromeOptions addHeadless(ChromeOptions options) {
+    if (Configuration.headless) options.setHeadless(true);
+    return options;
+  }
+
+  protected static FirefoxOptions addHeadless(FirefoxOptions options) {
+    if (Configuration.headless) options.setHeadless(true);
+    return options;
+  }
+
+  private static void addSslErrorIgnoreOptions(MutableCapabilities options) {
+    options.setCapability(ACCEPT_SSL_CERTS, true);
+    options.setCapability(ACCEPT_INSECURE_CERTS, true);
   }
 }
