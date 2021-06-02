@@ -1,8 +1,6 @@
 package integration.customcommands;
 
-import com.codeborne.selenide.commands.Commands;
 import integration.IntegrationTest;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +10,7 @@ import static integration.customcommands.MyFramework.quadrupleClickCounter;
 import static integration.customcommands.MyFramework.tripleClickCounter;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CustomCommandsTest extends IntegrationTest {
+final class CustomCommandsTest extends IntegrationTest {
   @BeforeEach
   void setUpFramework() {
     MyFramework.setUp();
@@ -37,10 +35,5 @@ class CustomCommandsTest extends IntegrationTest {
   @BeforeEach
   void openTestPage() {
     openFile("page_with_images.html");
-  }
-
-  @AfterEach
-  void resetSelenideDefaultCommands() {
-    Commands.getInstance().resetDefaults();
   }
 }

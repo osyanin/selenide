@@ -11,12 +11,15 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static com.codeborne.selenide.Selenide.open;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-class CustomWebDriverProviderTest extends IntegrationTest {
+final class CustomWebDriverProviderTest extends IntegrationTest {
   @BeforeEach
   void setUp() {
     assumeTrue("chrome".equalsIgnoreCase(browser));
@@ -44,7 +47,9 @@ class CustomWebDriverProviderTest extends IntegrationTest {
 
   private static class CustomWebDriverProvider implements WebDriverProvider {
     @Override
-    public WebDriver createDriver(DesiredCapabilities desiredCapabilities) {
+    @CheckReturnValue
+    @Nonnull
+    public WebDriver createDriver(@Nonnull DesiredCapabilities desiredCapabilities) {
       ChromeOptions options = new ChromeOptions();
       if (browser().isHeadless()) options.setHeadless(true);
       return new CustomChromeDriver(options);

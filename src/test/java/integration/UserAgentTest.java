@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UserAgentTest extends ITest {
+final class UserAgentTest extends ITest {
   @Test
   void currentUserAgentTest() {
     driver().open("/start_page.html");
@@ -13,6 +13,6 @@ class UserAgentTest extends ITest {
     assertThat(userAgent).isNotBlank();
     assertThat(userAgent)
       .withFailMessage(String.format("Current user agent [%s] should belong to '%s' browser", userAgent, browser))
-      .containsIgnoringCase(browser);
+      .containsIgnoringCase(browser.substring(0, browser.length() - 1));
   }
 }

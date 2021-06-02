@@ -4,6 +4,7 @@ import com.codeborne.selenide.SelenideElement;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static com.codeborne.selenide.CollectionCondition.texts;
 import static com.codeborne.selenide.Condition.attribute;
 import static com.codeborne.selenide.Condition.exist;
 import static com.codeborne.selenide.Condition.text;
@@ -15,7 +16,7 @@ import static com.codeborne.selenide.Selectors.byName;
 import static com.codeborne.selenide.Selectors.byPartialLinkText;
 import static com.codeborne.selenide.Selectors.byXpath;
 
-class SelectorsTest extends ITest {
+final class SelectorsTest extends ITest {
   @BeforeEach
   void openTestPageWithJQuery() {
     openFile("page_with_selects_without_jquery.html");
@@ -82,6 +83,7 @@ class SelectorsTest extends ITest {
   void canFindChildElementsCollectionByXpath() {
     SelenideElement parent = $x("//table[@id='multirowTable']");
     parent.$$x(".//tr").shouldHaveSize(2);
+    parent.$$x(".//tr").shouldHave(texts("Chack Norris", "Chack L'a Baskerville"));
   }
 
   @Test

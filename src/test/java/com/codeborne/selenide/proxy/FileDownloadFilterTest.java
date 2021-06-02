@@ -24,13 +24,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-class FileDownloadFilterTest implements WithAssertions {
-  private FileDownloadFilter filter = new FileDownloadFilter(
+final class FileDownloadFilterTest implements WithAssertions {
+  private final FileDownloadFilter filter = new FileDownloadFilter(
     new SelenideConfig().downloadsFolder("build/downloads"), new Downloader(new DummyRandomizer("random-text"))
   );
-  private HttpResponse response = mock(HttpResponse.class);
-  private HttpMessageContents contents = mock(HttpMessageContents.class);
-  private HttpMessageInfo messageInfo = mock(HttpMessageInfo.class);
+  private final HttpResponse response = mock(HttpResponse.class);
+  private final HttpMessageContents contents = mock(HttpMessageContents.class);
+  private final HttpMessageInfo messageInfo = mock(HttpMessageInfo.class);
 
   @BeforeEach
   void setUp() throws IOException {
@@ -95,10 +95,9 @@ class FileDownloadFilterTest implements WithAssertions {
     when(contents.getBinaryContents()).thenReturn(new byte[]{1, 2, 3, 4, 5});
 
     filter.filterResponse(response, contents, messageInfo);
-    assertThat(filter.getDownloadedFiles().size())
-      .isEqualTo(1);
+    assertThat(filter.downloads().size()).isEqualTo(1);
 
-    File file = filter.getDownloadedFiles().get(0).getFile();
+    File file = filter.downloads().files().get(0).getFile();
     File expectedFile = new File("build/downloads/random-text/report.pdf");
     assertThat(file.getName()).isEqualTo("report.pdf");
     assertThat(file.getPath()).endsWith(expectedFile.getPath());
@@ -117,7 +116,7 @@ class FileDownloadFilterTest implements WithAssertions {
 
     assertThat(filter.responsesAsString())
       .isEqualTo("Intercepted 1 responses:\n  #1  /foo/bar/cv.pdf?42 -> 200 \"200=success\" {} app/json  (7 bytes)\n");
-    File file = filter.getDownloadedFiles().get(0).getFile();
+    File file = filter.downloads().files().get(0).getFile();
     File expectedFile = new File("build/downloads/random-text/cv.pdf");
     assertThat(file.getName()).isEqualTo("cv.pdf");
     assertThat(file.getPath()).endsWith(expectedFile.getPath());

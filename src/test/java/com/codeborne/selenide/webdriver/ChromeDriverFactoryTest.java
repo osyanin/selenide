@@ -9,23 +9,28 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
 import static com.codeborne.selenide.webdriver.SeleniumCapabilitiesHelper.getBrowserLaunchArgs;
+import static com.codeborne.selenide.webdriver.SeleniumCapabilitiesHelper.getBrowserLaunchExcludeSwitches;
 import static com.codeborne.selenide.webdriver.SeleniumCapabilitiesHelper.getBrowserLaunchPrefs;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 
-class ChromeDriverFactoryTest implements WithAssertions {
+final class ChromeDriverFactoryTest implements WithAssertions {
   private static final String CHROME_OPTIONS_PREFS = "chromeoptions.prefs";
   private static final String CHROME_OPTIONS_ARGS = "chromeoptions.args";
+  private static final String DOWNLOADS_FOLDER = Paths.get("blah", "downloads").toString();
 
   private final Proxy proxy = mock(Proxy.class);
-  private final SelenideConfig config = new SelenideConfig().downloadsFolder("/blah/downloads");
+  private final SelenideConfig config = new SelenideConfig().downloadsFolder("build/should-not-be-used");
+  private final File browserDownloadsFolder = new File(DOWNLOADS_FOLDER);
   private final Browser browser = new Browser(config.browser(), config.headless());
   private final ChromeDriverFactory factory = new ChromeDriverFactory();
 
@@ -38,20 +43,42 @@ class ChromeDriverFactoryTest implements WithAssertions {
 
   @Test
   void defaultChromeOptions() {
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
     Map<String, Object> prefsMap = getBrowserLaunchPrefs(ChromeOptions.CAPABILITY, chromeOptions);
 
-    assertThat(prefsMap).hasSize(2);
+    assertThat(prefsMap).hasSizeGreaterThanOrEqualTo(4);
     assertThat(prefsMap).containsEntry("credentials_enable_service", false);
+    assertThat(prefsMap).containsEntry("plugins.always_open_pdf_externally", true);
+    assertThat(prefsMap).containsEntry("profile.default_content_setting_values.automatic_downloads", 1);
     assertThat(prefsMap).containsEntry("download.default_directory",
-      new File("/blah/downloads").getAbsolutePath());
+      new File(DOWNLOADS_FOLDER).getAbsolutePath());
+  }
+
+  @Test
+  void disablesAnnoyingPopupAboutExtensions() {
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
+
+    List<String> excludeSwitches = getBrowserLaunchExcludeSwitches(ChromeOptions.CAPABILITY, chromeOptions);
+    assertThat(excludeSwitches).isEqualTo(asList("enable-automation", "load-extension"));
+  }
+
+  @Test
+  void shouldNotExcludeExtensionsSwitch_ifChromeIsOpenedWithExtensions() {
+    ChromeOptions options = new ChromeOptions();
+    options.addExtensions(new File("build.gradle"), new File("settings.gradle"));
+    config.browserCapabilities(new DesiredCapabilities(options));
+
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
+
+    List<String> excludeSwitches = getBrowserLaunchExcludeSwitches(ChromeOptions.CAPABILITY, chromeOptions);
+    assertThat(excludeSwitches).isEqualTo(singletonList("enable-automation"));
   }
 
   @Test
   void shouldNotSetupDownloadFolder_forRemoteWebdriver() {
     config.remote("https://some.remote:1234/wd");
 
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, null);
 
     Map<String, Object> prefsMap = getBrowserLaunchPrefs(ChromeOptions.CAPABILITY, chromeOptions);
     assertThat(prefsMap).containsEntry("credentials_enable_service", false);
@@ -62,7 +89,7 @@ class ChromeDriverFactoryTest implements WithAssertions {
   void transferChromeOptionArgumentsFromSystemPropsToDriver() {
     System.setProperty(CHROME_OPTIONS_ARGS, "abdd,--abcd,\"snc,snc\",xcvcd=123,\"abc emd\"");
 
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
     List<String> optionArguments = getBrowserLaunchArgs(ChromeOptions.CAPABILITY, chromeOptions);
 
     assertThat(optionArguments)
@@ -74,7 +101,7 @@ class ChromeDriverFactoryTest implements WithAssertions {
     System.setProperty(CHROME_OPTIONS_PREFS, "key1=stringval,key2=1,key3=false,key4=true," +
       "\"key5=abc,555\",key6=\"555 abc\"");
 
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
     Map<String, Object> prefsMap = getBrowserLaunchPrefs(ChromeOptions.CAPABILITY, chromeOptions);
 
     assertThat(prefsMap)
@@ -90,7 +117,7 @@ class ChromeDriverFactoryTest implements WithAssertions {
   void transferChromeOptionPreferencesFromSystemPropsToDriverNoAssignmentStatement() {
     System.setProperty(CHROME_OPTIONS_PREFS, "key1=1,key2");
 
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
     Map<String, Object> prefsMap = getBrowserLaunchPrefs(ChromeOptions.CAPABILITY, chromeOptions);
 
     assertThat(prefsMap).containsEntry("key1", 1);
@@ -101,7 +128,7 @@ class ChromeDriverFactoryTest implements WithAssertions {
   void transferChromeOptionPreferencesFromSystemPropsToDriverTwoAssignmentStatement() {
     System.setProperty(CHROME_OPTIONS_PREFS, "key1=1,key2=1=false");
 
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
     Map<String, Object> prefsMap = getBrowserLaunchPrefs(ChromeOptions.CAPABILITY, chromeOptions);
 
     assertThat(prefsMap).containsEntry("key1", 1);
@@ -112,9 +139,9 @@ class ChromeDriverFactoryTest implements WithAssertions {
   void browserBinaryCanBeSet() {
     config.browserBinary("c:/browser.exe");
 
-    Capabilities caps = factory.createCapabilities(config, browser, proxy);
-    Map options = (Map) caps.asMap().get(ChromeOptions.CAPABILITY);
+    Capabilities caps = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
 
+    Map<String, Object> options = getChromeOptions(caps);
     assertThat(options.get("binary")).isEqualTo("c:/browser.exe");
   }
 
@@ -122,10 +149,26 @@ class ChromeDriverFactoryTest implements WithAssertions {
   void headlessCanBeSet() {
     config.headless(true);
 
-    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy);
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
     List<String> optionArguments = getBrowserLaunchArgs(ChromeOptions.CAPABILITY, chromeOptions);
 
     assertThat(optionArguments).contains("--headless");
+  }
+
+  @Test
+  void disablesUsingDevSharedMemory() {
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
+    List<String> optionArguments = getBrowserLaunchArgs(ChromeOptions.CAPABILITY, chromeOptions);
+
+    assertThat(optionArguments).contains("--disable-dev-shm-usage");
+  }
+
+  @Test
+  void disablesSandbox() {
+    Capabilities chromeOptions = factory.createCapabilities(config, browser, proxy, browserDownloadsFolder);
+    List<String> optionArguments = getBrowserLaunchArgs(ChromeOptions.CAPABILITY, chromeOptions);
+
+    assertThat(optionArguments).contains("--no-sandbox");
   }
 
   @Test
@@ -144,5 +187,10 @@ class ChromeDriverFactoryTest implements WithAssertions {
   void parseCSV_handles_quotes() {
     assertThat(factory.parseCSV("abdd,--abcd,\"snc,snc\",xcvcd=123,\"abc emd\""))
       .isEqualTo(asList("abdd", "--abcd", "\"snc,snc\"", "xcvcd=123", "\"abc emd\""));
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map<String, Object> getChromeOptions(Capabilities caps) {
+    return (Map<String, Object>) caps.asMap().get(ChromeOptions.CAPABILITY);
   }
 }

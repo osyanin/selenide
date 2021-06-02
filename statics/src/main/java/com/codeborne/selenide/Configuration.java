@@ -154,6 +154,15 @@ public class Configuration {
   public static String pageLoadStrategy = defaults.pageLoadStrategy();
 
   /**
+   * Timeout for loading a web page (in milliseconds).
+   * Default timeout in Selenium WebDriver is 300 seconds (which is incredibly long).
+   * Selenide default is 30 seconds.
+   *
+   * @since 5.15.0
+   */
+  public static long pageLoadTimeout = defaults.pageLoadTimeout();
+
+  /**
    * ATTENTION! Automatic WebDriver waiting after click isn't working in case of using this feature.
    * Use clicking via JavaScript instead common element clicking.
    * This solution may be helpful for testing in Internet Explorer.
@@ -215,7 +224,7 @@ public class Configuration {
    * Some people reported 150% speedup (because sending characters one-by-one was especially
    * slow via network to Selenium Grid on cloud).
    * <br>
-   * https://github.com/codeborne/selenide/issues/135
+   * https://github.com/selenide/selenide/issues/135
    * Can be configured either programmatically or by system property "-Dselenide.fastSetValue=true".
    * <br>
    * Default value: false
@@ -230,7 +239,7 @@ public class Configuration {
    * With this property being set to true, tests may no longer be dependent on actual control implementation in html and
    * be more abstract.
    * <br>
-   * https://github.com/codeborne/selenide/issues/508
+   * https://github.com/selenide/selenide/issues/508
    * Can be configured either programmatically or by system property "-Dselenide.versatileSetValue=true".
    * <br>
    * Default value: false
@@ -316,6 +325,22 @@ public class Configuration {
    * Default: true
    */
   public static boolean driverManagerEnabled = defaults.driverManagerEnabled();
+
+  /**
+   * <p>
+   *  Whether webdriver logs should be enabled.
+   * </p>
+   *
+   * <p>
+   *   These logs may be useful for debugging some webdriver issues.
+   *   But in most cases they are not needed (and can take quite a lot of disk space),
+   *   that's why don't enable them by default.
+   * </p>
+   *
+   * Default: false
+   * @since 5.18.0
+   */
+  public static boolean webdriverLogsEnabled = defaults.webdriverLogsEnabled();
 
   /**
    * Enables the ability to run the browser in headless mode.

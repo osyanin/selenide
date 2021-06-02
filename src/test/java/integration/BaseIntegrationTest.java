@@ -1,6 +1,7 @@
 package integration;
 
 import com.codeborne.selenide.Browser;
+import com.codeborne.selenide.junit5.TextReportExtension;
 import integration.server.LocalHttpServer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,17 +11,20 @@ import java.io.File;
 import java.util.Locale;
 
 import static com.automation.remarks.video.enums.RecordingMode.ANNOTATED;
+import static com.codeborne.selenide.Browsers.CHROME;
 import static com.codeborne.selenide.Browsers.FIREFOX;
+import static com.codeborne.selenide.Browsers.SAFARI;
+import static com.codeborne.selenide.impl.FileHelper.ensureFolderExists;
 import static java.lang.Boolean.parseBoolean;
 import static org.openqa.selenium.net.PortProber.findFreePort;
 
-@ExtendWith({LogTestNameExtension.class})
+@ExtendWith({LogTestNameExtension.class, TextReportExtension.class})
 public abstract class BaseIntegrationTest {
-  private static final boolean SSL = true;
   protected static LocalHttpServer server;
   private static String protocol;
   private static int port;
-  protected static final String browser = System.getProperty("selenide.browser", FIREFOX);
+  protected static final String browser = System.getProperty("selenide.browser", CHROME);
+  private static final boolean SSL = !SAFARI.equalsIgnoreCase(browser) && !FIREFOX.equalsIgnoreCase(browser);
   static final boolean headless = parseBoolean(System.getProperty("selenide.headless", "false"));
 
   @BeforeAll
@@ -49,7 +53,7 @@ public abstract class BaseIntegrationTest {
 
   private static void setUpVideoRecorder() {
     File videoFolder = new File(System.getProperty("selenide.reportsFolder", "build/reports/tests"));
-    videoFolder.mkdirs();
+    ensureFolderExists(videoFolder);
     System.setProperty("video.folder", videoFolder.getAbsolutePath());
     System.setProperty("video.enabled", String.valueOf(!browser().isHeadless()));
     System.setProperty("video.mode", String.valueOf(ANNOTATED));

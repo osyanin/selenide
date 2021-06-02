@@ -7,12 +7,21 @@ import org.openqa.selenium.InvalidArgumentException;
 import org.openqa.selenium.Proxy;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.opera.OperaDriver;
+import org.openqa.selenium.opera.OperaDriverService;
 import org.openqa.selenium.opera.OperaOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.io.File;
+
+@ParametersAreNonnullByDefault
 public class OperaDriverFactory extends AbstractDriverFactory {
   private static final Logger log = LoggerFactory.getLogger(OperaDriverFactory.class);
+  private final CdpClient cdpClient = new CdpClient();
 
   @Override
   public void setupWebdriverBinary() {
@@ -22,12 +31,27 @@ public class OperaDriverFactory extends AbstractDriverFactory {
   }
 
   @Override
-  public WebDriver create(Config config, Browser browser, Proxy proxy) {
-    return new OperaDriver(createCapabilities(config, browser, proxy));
+  @CheckReturnValue
+  @Nonnull
+  public WebDriver create(Config config, Browser browser, @Nullable Proxy proxy, File browserDownloadsFolder) {
+    OperaDriverService driverService = createDriverService(config);
+    OperaOptions capabilities = createCapabilities(config, browser, proxy, browserDownloadsFolder);
+    OperaDriver driver = new OperaDriver(driverService, capabilities);
+    if (browserDownloadsFolder != null) {
+      cdpClient.setDownloadsFolder(driverService, driver, browserDownloadsFolder);
+    }
+    return driver;
+  }
+
+  private OperaDriverService createDriverService(Config config) {
+    return withLog(config, new OperaDriverService.Builder());
   }
 
   @Override
-  public OperaOptions createCapabilities(Config config, Browser browser, Proxy proxy) {
+  @CheckReturnValue
+  @Nonnull
+  public OperaOptions createCapabilities(Config config, Browser browser,
+                                         @Nullable Proxy proxy, @Nullable File browserDownloadsFolder) {
     OperaOptions operaOptions = new OperaOptions();
     if (config.headless()) {
       throw new InvalidArgumentException("headless browser not supported in Opera. Set headless property to false.");

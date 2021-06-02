@@ -6,7 +6,14 @@ import com.codeborne.selenide.ex.InvalidStateException;
 import com.codeborne.selenide.impl.WebElementSource;
 import org.openqa.selenium.WebElement;
 
-public class SetSelected implements Command<WebElement> {
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+import static com.codeborne.selenide.commands.Util.firstOf;
+
+@ParametersAreNonnullByDefault
+public class SetSelected implements Command<SelenideElement> {
   private final Click click;
 
   public SetSelected() {
@@ -18,8 +25,9 @@ public class SetSelected implements Command<WebElement> {
   }
 
   @Override
-  public WebElement execute(SelenideElement proxy, WebElementSource locator, Object[] args) {
-    boolean selected = (Boolean) args[0];
+  @Nonnull
+  public SelenideElement execute(SelenideElement proxy, WebElementSource locator, @Nullable Object[] args) {
+    boolean selected = firstOf(args);
     WebElement element = locator.getWebElement();
     if (!element.isDisplayed()) {
       throw new InvalidStateException(locator.driver(), "Cannot change invisible element");

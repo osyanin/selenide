@@ -20,7 +20,9 @@ import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static org.apache.commons.lang3.SystemUtils.IS_OS_WINDOWS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ScreenshotTest extends IntegrationTest {
+final class ScreenshotTest extends IntegrationTest {
+  private final String dir = System.getProperty("user.dir");
+
   @BeforeEach
   void openTestPage() {
     openFile("page_with_big_divs.html");
@@ -31,7 +33,8 @@ class ScreenshotTest extends IntegrationTest {
     SelenideElement element = $("#small_div");
     File screenshot = element.screenshot();
     String info = "(Screenshot of element: " + screenshot.getAbsolutePath() + ") ";
-    String screenshotPath = IS_OS_WINDOWS ? Configuration.reportsFolder.replace("/", "\\") : Configuration.reportsFolder;
+    String path = dir + '/' + Configuration.reportsFolder;
+    String screenshotPath = IS_OS_WINDOWS ? path.replace("/", "\\") : path;
 
     BufferedImage img = ImageIO.read(screenshot);
     assertThat(element.getSize().getWidth())

@@ -5,14 +5,17 @@ import com.codeborne.selenide.drivercommands.Navigator;
 import com.codeborne.selenide.drivercommands.WebDriverWrapper;
 import com.codeborne.selenide.impl.DownloadFileWithHttpRequest;
 import com.codeborne.selenide.impl.ElementFinder;
-import com.codeborne.selenide.impl.SelenidePageFactory;
+import com.codeborne.selenide.impl.PageObjectFactory;
+import com.codeborne.selenide.impl.ScreenShotLaboratory;
+import com.codeborne.selenide.logevents.SelenideLogger;
 import com.codeborne.selenide.proxy.SelenideProxyServer;
-import com.google.errorprone.annotations.CheckReturnValue;
 import org.openqa.selenium.By;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.events.WebDriverEventListener;
 
+import javax.annotation.CheckReturnValue;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -25,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.codeborne.selenide.files.FileFilters.none;
+import static com.codeborne.selenide.impl.Plugins.inject;
 import static com.codeborne.selenide.impl.WebElementWrapper.wrap;
 import static java.util.Collections.emptyList;
 
@@ -34,6 +38,7 @@ import static java.util.Collections.emptyList;
 @ParametersAreNonnullByDefault
 public class SelenideDriver {
   private static final Navigator navigator = new Navigator();
+  private static final ScreenShotLaboratory screenshots = ScreenShotLaboratory.getInstance();
 
   private final Config config;
   private final Driver driver;
@@ -51,9 +56,14 @@ public class SelenideDriver {
     this.driver = driver;
   }
 
-  public SelenideDriver(Config config, WebDriver webDriver, SelenideProxyServer selenideProxy) {
+  public SelenideDriver(Config config, WebDriver webDriver, @Nullable SelenideProxyServer selenideProxy) {
+    this(config, webDriver, selenideProxy, new SharedDownloadsFolder(config.downloadsFolder()));
+  }
+
+  public SelenideDriver(Config config, WebDriver webDriver, @Nullable SelenideProxyServer selenideProxy,
+                        DownloadsFolder browserDownloadsFolder) {
     this.config = config;
-    this.driver = new WebDriverWrapper(config, webDriver, selenideProxy);
+    this.driver = new WebDriverWrapper(config, webDriver, selenideProxy, browserDownloadsFolder);
   }
 
   @CheckReturnValue
@@ -126,13 +136,13 @@ public class SelenideDriver {
   @CheckReturnValue
   @Nonnull
   public <PageObjectClass> PageObjectClass page(Class<PageObjectClass> pageObjectClass) {
-    return pageFactory().page(driver(), pageObjectClass);
+    return pageFactory.page(driver(), pageObjectClass);
   }
 
   @CheckReturnValue
   @Nonnull
   public <PageObjectClass, T extends PageObjectClass> PageObjectClass page(T pageObject) {
-    return pageFactory().page(driver(), pageObject);
+    return pageFactory.page(driver(), pageObject);
   }
 
   public void refresh() {
@@ -148,8 +158,10 @@ public class SelenideDriver {
   }
 
   public void updateHash(String hash) {
-    String localHash = (hash.charAt(0) == '#') ? hash.substring(1) : hash;
-    executeJavaScript("window.location.hash='" + localHash + "'");
+    SelenideLogger.run("updateHash", hash, () -> {
+      String localHash = (hash.charAt(0) == '#') ? hash.substring(1) : hash;
+      executeJavaScript("window.location.hash='" + localHash + "'");
+    });
   }
 
   @CheckReturnValue
@@ -174,14 +186,15 @@ public class SelenideDriver {
     return driver.getWebDriver();
   }
 
-  @CheckReturnValue
   @Nonnull
   public WebDriver getAndCheckWebDriver() {
     return driver.getAndCheckWebDriver();
   }
 
   public void clearCookies() {
-    driver().clearCookies();
+    SelenideLogger.run("clearCookies", "", () -> {
+      driver().clearCookies();
+    });
   }
 
   public void close() {
@@ -371,6 +384,30 @@ public class SelenideDriver {
     return driver().getUserAgent();
   }
 
+  /**
+   * Take a screenshot of the current page
+   *
+   * @return absolute path of the screenshot taken or null if failed to create screenshot
+   * @since 5.14.0
+   */
+  @CheckReturnValue
+  @Nullable
+  public String screenshot(String fileName) {
+    return screenshots.takeScreenShot(driver(), fileName);
+  }
+
+  /**
+   * Take a screenshot of the current page
+   *
+   * @return The screenshot (as bytes, base64 or temporary file)
+   * @since 5.14.0
+   */
+  @CheckReturnValue
+  @Nullable
+  public <T> T screenshot(OutputType<T> outputType) {
+    return screenshots.takeScreenShot(driver(), outputType);
+  }
+
   @Nonnull
   public File download(String url) throws IOException, URISyntaxException {
     return download(new URI(url), config.timeout());
@@ -391,13 +428,26 @@ public class SelenideDriver {
     return downloadFileWithHttpRequest().download(driver(), url, timeoutMs, none());
   }
 
-  private static SelenidePageFactory pageFactory;
-  private static DownloadFileWithHttpRequest downloadFileWithHttpRequest;
-
-  private static synchronized SelenidePageFactory pageFactory() {
-    if (pageFactory == null) pageFactory = new SelenidePageFactory();
-    return pageFactory;
+  @CheckReturnValue
+  @Nonnull
+  public LocalStorage getLocalStorage() {
+    return new LocalStorage(driver());
   }
+
+  @CheckReturnValue
+  @Nonnull
+  public SessionStorage getSessionStorage() {
+    return new SessionStorage(driver());
+  }
+
+  @CheckReturnValue
+  @Nonnull
+  public Clipboard getClipboard() {
+    return inject(ClipboardService.class).getClipboard(driver());
+  }
+
+  private static final PageObjectFactory pageFactory = inject(PageObjectFactory.class);
+  private static DownloadFileWithHttpRequest downloadFileWithHttpRequest;
 
   private static synchronized DownloadFileWithHttpRequest downloadFileWithHttpRequest() {
     if (downloadFileWithHttpRequest == null) downloadFileWithHttpRequest = new DownloadFileWithHttpRequest();

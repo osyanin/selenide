@@ -15,6 +15,10 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.closeWebDriver;
@@ -24,7 +28,7 @@ import static com.codeborne.selenide.WebDriverRunner.isFirefox;
 import static com.codeborne.selenide.WebDriverRunner.isHeadless;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-public class CustomWebdriverProviderWithSelenideProxyTest extends IntegrationTest {
+final class CustomWebdriverProviderWithSelenideProxyTest extends IntegrationTest {
   @BeforeEach
   void setUp() {
     assumeThat(isChrome() || isFirefox()).isTrue();
@@ -45,10 +49,15 @@ public class CustomWebdriverProviderWithSelenideProxyTest extends IntegrationTes
     $("body").shouldHave(text("Hello, scott:tiger!"));
   }
 
+  @ParametersAreNonnullByDefault
   private static class MyWebDriverProvider implements WebDriverProvider {
     @Override
+    @CheckReturnValue
+    @Nonnull
     public WebDriver createDriver(DesiredCapabilities desiredCapabilities) {
-      return isChrome() ? chrome(desiredCapabilities) : firefox(desiredCapabilities);
+      if (browser().isChrome()) return chrome(desiredCapabilities);
+      if (browser().isFirefox()) return firefox(desiredCapabilities);
+      throw new IllegalStateException("Unsupported browser: " + browser().name);
     }
 
     private ChromeDriver chrome(DesiredCapabilities desiredCapabilities) {

@@ -6,14 +6,18 @@ import com.codeborne.selenide.ex.ElementNotFound;
 import com.codeborne.selenide.ex.TextsMismatch;
 import com.codeborne.selenide.ex.TextsSizeMismatch;
 import com.codeborne.selenide.impl.Html;
-import com.codeborne.selenide.impl.WebElementsCollection;
+import com.codeborne.selenide.impl.CollectionSource;
 import org.openqa.selenium.WebElement;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
+@ParametersAreNonnullByDefault
 public class ExactTexts extends CollectionCondition {
   protected final List<String> expectedTexts;
 
@@ -28,6 +32,7 @@ public class ExactTexts extends CollectionCondition {
     this.expectedTexts = unmodifiableList(expectedTexts);
   }
 
+  @CheckReturnValue
   @Override
   public boolean test(List<WebElement> elements) {
     if (elements.size() != expectedTexts.size()) {
@@ -45,9 +50,12 @@ public class ExactTexts extends CollectionCondition {
   }
 
   @Override
-  public void fail(WebElementsCollection collection, List<WebElement> elements, Exception lastError, long timeoutMs) {
+  public void fail(CollectionSource collection,
+                   @Nullable List<WebElement> elements,
+                   @Nullable Exception lastError,
+                   long timeoutMs) {
     if (elements == null || elements.isEmpty()) {
-      ElementNotFound elementNotFound = new ElementNotFound(collection, expectedTexts, lastError);
+      ElementNotFound elementNotFound = new ElementNotFound(collection, toString(), lastError);
       elementNotFound.timeoutMs = timeoutMs;
       throw elementNotFound;
     }

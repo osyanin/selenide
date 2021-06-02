@@ -5,7 +5,7 @@ import com.codeborne.selenide.DriverStub;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.Test;
 
-class DialogTextMismatchTest implements WithAssertions {
+final class DialogTextMismatchTest implements WithAssertions {
   @Test
   void dialogMismatchTextStringTest() {
     Driver driver = new DriverStub();
@@ -14,7 +14,6 @@ class DialogTextMismatchTest implements WithAssertions {
     assertThat(dialogTextMismatch).hasMessage(String.format("Dialog text mismatch%n" +
       "Actual: Actual text%n" +
       "Expected: Expected text%n" +
-      "Screenshot: null%n" +
       "Timeout: 0 ms."));
   }
 }

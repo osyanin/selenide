@@ -15,14 +15,15 @@ import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selectors.byText;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class SelenideDriverITest extends ITest {
+final class SelenideDriverITest extends ITest {
   private SelenideDriver browser1;
   private SelenideDriver browser2;
 
   @BeforeEach
   void setUp() {
+    driver().close();
     browser1 = new SelenideDriver(new SelenideConfig().browser(browser).baseUrl(getBaseUrl()));
-    browser2 = new SelenideDriver(new SelenideConfig().browser("firefox").baseUrl(getBaseUrl()));
+    browser2 = new SelenideDriver(new SelenideConfig().browser(browser).baseUrl(getBaseUrl()));
   }
 
   @AfterEach

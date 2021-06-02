@@ -22,11 +22,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class WebElementSelectorTest {
-  private WebElementSelector selector = new WebElementSelector();
-  private Browser browser = new Browser("zopera", false);
-  private JSWebDriver webDriver = mock(JSWebDriver.class);
-  private SearchContext parent = mock(WebElement.class);
+final class WebElementSelectorTest {
+  private final WebElementSelector selector = new WebElementSelector();
+  private final Browser browser = new Browser("zopera", false);
+  private final JSWebDriver webDriver = mock(JSWebDriver.class);
+  private final SearchContext parent = mock(WebElement.class);
 
   @Test
   void findElement_byCss() {

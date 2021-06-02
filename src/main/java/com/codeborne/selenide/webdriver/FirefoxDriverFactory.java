@@ -9,9 +9,14 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.firefox.FirefoxProfile;
+import org.openqa.selenium.firefox.GeckoDriverService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -22,6 +27,7 @@ import static java.lang.Boolean.parseBoolean;
 import static java.lang.Integer.parseInt;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+@ParametersAreNonnullByDefault
 public class FirefoxDriverFactory extends AbstractDriverFactory {
   private static final Logger log = LoggerFactory.getLogger(FirefoxDriverFactory.class);
 
@@ -33,26 +39,36 @@ public class FirefoxDriverFactory extends AbstractDriverFactory {
   }
 
   @Override
-  public WebDriver create(Config config, Browser browser, Proxy proxy) {
-    String logFilePath = System.getProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE, "/dev/null");
-    System.setProperty(FirefoxDriver.SystemProperty.BROWSER_LOGFILE, logFilePath);
-    return new FirefoxDriver(createCapabilities(config, browser, proxy));
+  @CheckReturnValue
+  @Nonnull
+  public WebDriver create(Config config, Browser browser, @Nullable Proxy proxy, File browserDownloadsFolder) {
+    return new FirefoxDriver(createDriverService(config), createCapabilities(config, browser, proxy, browserDownloadsFolder));
+  }
+
+  @CheckReturnValue
+  @Nonnull
+  protected GeckoDriverService createDriverService(Config config) {
+    return withLog(config, new GeckoDriverService.Builder());
   }
 
   @Override
-  public FirefoxOptions createCapabilities(Config config, Browser browser, Proxy proxy) {
+  @CheckReturnValue
+  @Nonnull
+  public FirefoxOptions createCapabilities(Config config, Browser browser,
+                                           @Nullable Proxy proxy, @Nullable File browserDownloadsFolder) {
     FirefoxOptions firefoxOptions = new FirefoxOptions();
     firefoxOptions.setHeadless(config.headless());
     setupBrowserBinary(config, firefoxOptions);
     setupPreferences(firefoxOptions);
     firefoxOptions.merge(createCommonCapabilities(config, browser, proxy));
 
-    setupDownloadsFolder(config, firefoxOptions);
+    setupDownloadsFolder(firefoxOptions, browserDownloadsFolder);
 
     Map<String, String> ffProfile = collectFirefoxProfileFromSystemProperties();
     if (!ffProfile.isEmpty()) {
       transferFirefoxProfileFromSystemProperties(firefoxOptions, ffProfile);
     }
+    injectFirefoxPrefs(firefoxOptions);
     return firefoxOptions;
   }
 
@@ -74,15 +90,17 @@ public class FirefoxDriverFactory extends AbstractDriverFactory {
     firefoxOptions.addPreference("network.proxy.allow_hijacking_localhost", true);
   }
 
-  protected void setupDownloadsFolder(Config config, FirefoxOptions firefoxOptions) {
-    if (config.remote() == null) {
-      firefoxOptions.addPreference("browser.download.dir", new File(config.downloadsFolder()).getAbsolutePath());
+  protected void setupDownloadsFolder(FirefoxOptions firefoxOptions, @Nullable File browserDownloadsFolder) {
+    if (browserDownloadsFolder != null) {
+      firefoxOptions.addPreference("browser.download.dir", browserDownloadsFolder.getAbsolutePath());
     }
     firefoxOptions.addPreference("browser.helperApps.neverAsk.saveToDisk", popularContentTypes());
     firefoxOptions.addPreference("pdfjs.disabled", true);  // disable the built-in viewer
     firefoxOptions.addPreference("browser.download.folderList", 2); // 0=Desktop, 1=Downloads, 2="reuse last location"
   }
 
+  @CheckReturnValue
+  @Nonnull
   protected String popularContentTypes() {
     try {
       return String.join(";", IOUtils.readLines(getClass().getResourceAsStream("/content-types.properties"), UTF_8));
@@ -93,6 +111,8 @@ public class FirefoxDriverFactory extends AbstractDriverFactory {
     }
   }
 
+  @CheckReturnValue
+  @Nonnull
   protected Map<String, String> collectFirefoxProfileFromSystemProperties() {
     String prefix = "firefoxprofile.";
 
@@ -130,6 +150,24 @@ public class FirefoxDriverFactory extends AbstractDriverFactory {
     }
     else {
       profile.setPreference(capability, value);
+    }
+  }
+
+  private void injectFirefoxPrefs(FirefoxOptions options) {
+    if (options.getCapability("moz:firefoxOptions") != null) {
+      Map<String, Map<String, Object>> mozOptions = cast(options.getCapability("moz:firefoxOptions"));
+
+      if (mozOptions.containsKey("prefs")) {
+        for (Map.Entry<String, Object> pref : mozOptions.get("prefs").entrySet()) {
+          if (pref.getValue() instanceof String) {
+            options.addPreference(pref.getKey(), (String) pref.getValue());
+          } else if (pref.getValue() instanceof Integer) {
+            options.addPreference(pref.getKey(), (Integer) pref.getValue());
+          } else if (pref.getValue() instanceof Boolean) {
+            options.addPreference(pref.getKey(), (Boolean) pref.getValue());
+          }
+        }
+      }
     }
   }
 }

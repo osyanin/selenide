@@ -1,8 +1,6 @@
 package com.codeborne.selenide.impl;
 
 import com.codeborne.selenide.Driver;
-import com.codeborne.selenide.SelenideElement;
-import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.UnsupportedCommandException;
@@ -11,10 +9,16 @@ import org.openqa.selenium.WebElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Supplier;
 
+@ParametersAreNonnullByDefault
 public class Describe {
   private static final Logger log = LoggerFactory.getLogger(Describe.class);
 
@@ -22,13 +26,13 @@ public class Describe {
   private final WebElement element;
   private final StringBuilder sb = new StringBuilder();
 
-  private Describe(Driver driver, WebElement element) {
+  public Describe(Driver driver, WebElement element) {
     this.driver = driver;
     this.element = element;
     sb.append('<').append(element.getTagName());
   }
 
-  private Describe appendAttributes() {
+  public Describe appendAttributes() {
     try {
       if (supportsJavascriptAttributes()) {
         return appendAllAttributes();
@@ -36,6 +40,7 @@ public class Describe {
     }
     catch (NoSuchElementException | UnsupportedOperationException | UnsupportedCommandException |
       StaleElementReferenceException browserDoesNotSupportJavaScript) {
+      // ignore
     }
     catch (WebDriverException probablyBrowserDoesNotSupportJavaScript) {
       if (!probablyBrowserDoesNotSupportJavaScript.getMessage().toLowerCase().contains("method is not implemented")) {
@@ -82,7 +87,7 @@ public class Describe {
     return driver.supportsJavascript();
   }
 
-  private Describe attr(String attributeName) {
+  public Describe attr(String attributeName) {
     try {
       String attributeValue = element.getAttribute(attributeName);
       return attr(attributeName, attributeValue);
@@ -99,7 +104,7 @@ public class Describe {
     }
   }
 
-  private Describe attr(String attributeName, String attributeValue) {
+  private Describe attr(String attributeName, @Nullable String attributeValue) {
     if (attributeValue != null) {
       if (attributeValue.length() > 0) {
         sb.append(' ').append(attributeName).append("=\"").append(attributeValue).append('"');
@@ -110,57 +115,24 @@ public class Describe {
     return this;
   }
 
-  private String serialize() {
-    String text = element.getText();
-    sb.append('>').append(text == null ? "" : text).append("</").append(element.getTagName()).append('>');
+  public String serialize() {
+    String text = safeCall("text", element::getText);
+    sb.append('>').append(text == null ? "" : text).append("</").append(safeCall("tagName", element::getTagName)).append('>');
     return sb.toString();
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public String toString() {
     return sb.toString();
   }
 
-  private String flush() {
+  public String flush() {
     return sb.append('>').toString();
   }
 
-  public static String describe(Driver driver, WebElement element) {
-    try {
-      if (element == null) {
-        return "null";
-      }
-      return new Describe(driver, element)
-          .appendAttributes()
-          .isSelected(element)
-          .isDisplayed(element)
-          .serialize();
-    } catch (WebDriverException elementDoesNotExist) {
-      return Cleanup.of.webdriverExceptionMessage(elementDoesNotExist);
-    }
-    catch (IndexOutOfBoundsException e) {
-      return e.toString();
-    }
-  }
-
-  static String shortly(Driver driver, WebElement element) {
-    try {
-      if (element == null) {
-        return "null";
-      }
-      if (element instanceof SelenideElement) {
-        return shortly(driver, ((SelenideElement) element).toWebElement());
-      }
-      return new Describe(driver, element).attr("id").attr("name").flush();
-    } catch (WebDriverException elementDoesNotExist) {
-      return Cleanup.of.webdriverExceptionMessage(elementDoesNotExist);
-    }
-    catch (IndexOutOfBoundsException e) {
-      return e.toString();
-    }
-  }
-
-  private Describe isSelected(WebElement element) {
+  public Describe isSelected(WebElement element) {
     try {
       if (element.isSelected()) {
         sb.append(' ').append("selected:true");
@@ -170,29 +142,34 @@ public class Describe {
     return this;
   }
 
-  private Describe isDisplayed(WebElement element) {
+  public Describe isDisplayed(WebElement element) {
     try {
       if (!element.isDisplayed()) {
         sb.append(' ').append("displayed:false");
       }
-    } catch (UnsupportedOperationException | WebDriverException e) {
+    }
+    catch (UnsupportedOperationException | WebDriverException e) {
+      log.debug("Failed to check visibility", e);
+      sb.append(' ').append("displayed:").append(Cleanup.of.webdriverExceptionMessage(e));
+    }
+    catch (RuntimeException e) {
+      log.error("Failed to check visibility", e);
       sb.append(' ').append("displayed:").append(Cleanup.of.webdriverExceptionMessage(e));
     }
     return this;
   }
 
-  static String shortly(By selector) {
-    if (selector instanceof By.ByCssSelector) {
-      return selector.toString()
-          .replaceFirst("By\\.selector:\\s*(.*)", "$1")
-          .replaceFirst("By\\.cssSelector:\\s*(.*)", "$1");
+  private String safeCall(String name, Supplier<String> method) {
+    try {
+      return method.get();
     }
-    return selector.toString();
-  }
-
-  public static String selector(By selector) {
-    return selector.toString()
-        .replaceFirst("By\\.selector:\\s*", "")
-        .replaceFirst("By\\.cssSelector:\\s*", "");
+    catch (WebDriverException e) {
+      log.debug("Failed to get {}", name, e);
+      return Cleanup.of.webdriverExceptionMessage(e);
+    }
+    catch (RuntimeException e) {
+      log.error("Failed to get {}", name, e);
+      return "?";
+    }
   }
 }

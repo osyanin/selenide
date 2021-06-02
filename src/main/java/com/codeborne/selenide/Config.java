@@ -11,8 +11,10 @@ public interface Config {
   String browserPosition();
   boolean startMaximized();
   boolean driverManagerEnabled();
+  boolean webdriverLogsEnabled();
   String browserBinary();
   String pageLoadStrategy();
+  long pageLoadTimeout();
   MutableCapabilities browserCapabilities();
 
   String baseUrl();

@@ -4,25 +4,30 @@ import com.codeborne.selenide.Command;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.impl.WebElementSource;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.codeborne.selenide.impl.Plugins.inject;
+
+@ParametersAreNonnullByDefault
 public class Commands {
-  private static Commands collection;
+  private static Commands instance;
+
+  public static synchronized Commands getInstance() {
+    if (instance == null) {
+      instance = inject(Commands.class);
+    }
+    return instance;
+  }
 
   private final Map<String, Command<?>> commands = new ConcurrentHashMap<>(128);
 
-  public static synchronized Commands getInstance() {
-    if (collection == null) {
-      collection = new Commands();
-      collection.resetDefaults();
-    }
-    return collection;
-  }
-
-  public final synchronized void resetDefaults() {
-    commands.clear();
+  protected Commands() {
     addFindCommands();
     addClickCommands();
     addModifyCommands();
@@ -37,6 +42,8 @@ public class Commands {
   }
 
   private void addTechnicalCommands() {
+    add("as", new As());
+    add("getAlias", new GetAlias());
     add("toString", new ToString());
     add("toWebElement", new ToWebElement());
     add("getWrappedElement", new GetWrappedElement());
@@ -59,6 +66,7 @@ public class Commands {
     add("getCssValue", new GetCssValue());
     add("data", new GetDataAttribute());
     add("exists", new Exists());
+    add("getOwnText", new GetOwnText());
     add("innerText", new GetInnerText());
     add("innerHtml", new GetInnerHtml());
     add("has", new Matches());
@@ -126,27 +134,35 @@ public class Commands {
     add("shouldNot", new ShouldNot());
     add("shouldNotHave", new ShouldNotHave());
     add("shouldNotBe", new ShouldNotBe());
-    add("waitWhile", new ShouldNotBe());
+    add("waitWhile", new WaitWhile());
   }
 
   private void addShouldCommands() {
     add("should", new Should());
     add("shouldHave", new ShouldHave());
     add("shouldBe", new ShouldBe());
-    add("waitUntil", new ShouldBe());
+    add("waitUntil", new WaitUntil());
   }
 
-  public void add(String method, Command<?> command) {
+  public final void add(String method, Command<?> command) {
     commands.put(method, command);
   }
 
+  @Nullable
+  public <T> T execute(Object proxy, WebElementSource webElementSource, String methodName,
+                       @Nullable Object[] args) throws IOException {
+    Command<T> command = getCommand(methodName);
+    return command.execute((SelenideElement) proxy, webElementSource, args);
+  }
+
   @SuppressWarnings("unchecked")
-  public <T> T execute(Object proxy, WebElementSource webElementSource, String methodName, Object[] args)
-      throws IOException {
-    Command<?> command = commands.get(methodName);
+  @CheckReturnValue
+  @Nonnull
+  private <T> Command<T> getCommand(String methodName) {
+    Command<T> command = (Command<T>) commands.get(methodName);
     if (command == null) {
       throw new IllegalArgumentException("Unknown Selenide method: " + methodName);
     }
-    return (T) command.execute((SelenideElement) proxy, webElementSource, args);
+    return command;
   }
 }

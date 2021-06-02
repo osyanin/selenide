@@ -2,7 +2,7 @@ package com.codeborne.selenide.collections;
 
 import com.codeborne.selenide.Mocks;
 import com.codeborne.selenide.ex.ListSizeMismatch;
-import com.codeborne.selenide.impl.WebElementsCollection;
+import com.codeborne.selenide.impl.CollectionSource;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebElement;
@@ -12,7 +12,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 
-class SizeGreaterThanTest implements WithAssertions {
+final class SizeGreaterThanTest implements WithAssertions {
   @Test
   void applyWithEmptyList() {
     assertThat(new SizeGreaterThan(10).test(emptyList()))
@@ -33,7 +33,7 @@ class SizeGreaterThanTest implements WithAssertions {
 
   @Test
   void failMethod() {
-    WebElementsCollection collection = Mocks.mockCollection("Collection description");
+    CollectionSource collection = Mocks.mockCollection("Collection description");
 
     assertThatThrownBy(() ->
       new SizeGreaterThan(10).fail(collection,

@@ -10,10 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-class WebDriverThreadLocalContainerTest implements WithAssertions {
+final class WebDriverThreadLocalContainerTest implements WithAssertions {
   private final WebDriverThreadLocalContainer container = new WebDriverThreadLocalContainer();
 
   @BeforeEach
@@ -104,8 +108,14 @@ class WebDriverThreadLocalContainerTest implements WithAssertions {
 
   private static class DummyProvider implements WebDriverProvider {
     @Override
-    public WebDriver createDriver(DesiredCapabilities desiredCapabilities) {
-      return mock(WebDriver.class);
+    @CheckReturnValue
+    @Nonnull
+    public WebDriver createDriver(@Nonnull DesiredCapabilities desiredCapabilities) {
+      WebDriver webdriver = mock(WebDriver.class);
+      WebDriver.Options options = mock(WebDriver.Options.class);
+      when(webdriver.manage()).thenReturn(options);
+      when(options.timeouts()).thenReturn(mock(WebDriver.Timeouts.class));
+      return webdriver;
     }
   }
 }

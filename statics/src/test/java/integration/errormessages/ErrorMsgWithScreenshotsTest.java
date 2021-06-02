@@ -9,7 +9,9 @@ import integration.IntegrationTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.NoSuchElementException;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 
 import static com.codeborne.selenide.Condition.cssClass;
@@ -22,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.fail;
 
-class ErrorMsgWithScreenshotsTest extends IntegrationTest {
+final class ErrorMsgWithScreenshotsTest extends IntegrationTest {
   private String reportsUrl;
   private String reportsFolder;
 
   @BeforeEach
-  final void setTimeout() {
+  void setTimeout() {
     timeout = 0;
     openFile("page_with_selects_without_jquery.html");
   }
@@ -40,7 +42,7 @@ class ErrorMsgWithScreenshotsTest extends IntegrationTest {
     Configuration.reportsUrl = "http://ci.org/";
     Screenshots.screenshots = new ScreenShotLaboratory() {
       @Override
-      public String takeScreenShot(Driver driver) {
+      public String takeScreenShot(@Nonnull Driver driver) {
         return new File(reportsFolder, "1.jpg").getAbsolutePath();
       }
     };
@@ -62,7 +64,10 @@ class ErrorMsgWithScreenshotsTest extends IntegrationTest {
         .shouldBe(visible)
     )
       .isInstanceOf(ElementNotFound.class)
-      .hasMessageContaining("Element not found {#nonexisting-form}");
+      .hasMessageContaining("Element not found {#nonexisting-form/by text: mymail@gmail.com.findBy(css class 'trash')}")
+      .getCause()
+      .isInstanceOf(NoSuchElementException.class)
+      .hasMessageContainingAll("Unable to locate element", "#nonexisting-form");
   }
 
   @Test
@@ -75,10 +80,10 @@ class ErrorMsgWithScreenshotsTest extends IntegrationTest {
         .shouldBe(visible)
     )
       .isInstanceOf(ElementNotFound.class)
-      .hasMessageContaining("Element not found {thead}")
+      .hasMessageContaining("Element not found {#multirowTable/thead}")
       .matches(e -> {
         String path = "/integration/errormessages/ErrorMsgWithScreenshotsTest/reportWhichParentElementIsNotFound";
-        return ((ElementNotFound) e).getScreenshot()
+        return ((ElementNotFound) e).getScreenshot().getImage()
           .matches("http://ci\\.org/build/reports/tests/ErrorMsgWithScreenshotsTest" + path + "/\\d+\\.\\d+\\.(png|html)");
       });
   }
@@ -97,7 +102,7 @@ class ErrorMsgWithScreenshotsTest extends IntegrationTest {
       assertThat(e)
         .hasMessageContaining("Element not found {#multirowTable/thead");
       String path = "/integration/errormessages/ErrorMsgWithScreenshotsTest/reportIfParentCollectionIsNotFound";
-      assertThat(e.getScreenshot())
+      assertThat(e.getScreenshot().getImage())
         .matches("http://ci\\.org/build/reports/tests/ErrorMsgWithScreenshotsTest" + path + "/\\d+\\.\\d+\\.(png|html)");
     }
   }
@@ -114,7 +119,7 @@ class ErrorMsgWithScreenshotsTest extends IntegrationTest {
     }
     catch (ElementNotFound e) {
       assertThat(e)
-        .hasMessageContaining("Element not found {.second_row}");
+        .hasMessageContaining("Element not found {#multirowTable/tbody tr.findBy(text 'Norris')/.second_row}");
     }
   }
 

@@ -12,6 +12,8 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.events.WebDriverEventListener;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
 import java.net.URL;
 
 import static com.codeborne.selenide.Browsers.FIREFOX;
@@ -28,10 +30,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-class WebDriverRunnerTest implements WithAssertions {
+final class WebDriverRunnerTest implements WithAssertions {
   private static WebDriver driver;
 
-  private URL url = currentThread().getContextClassLoader().getResource("start_page.html");
+  private final URL url = currentThread().getContextClassLoader().getResource("start_page.html");
 
   @BeforeEach
   void resetWebDriverContainer() {
@@ -83,7 +85,9 @@ class WebDriverRunnerTest implements WithAssertions {
 
   private static class CustomWebDriverProvider implements WebDriverProvider {
     @Override
-    public WebDriver createDriver(DesiredCapabilities desiredCapabilities) {
+    @CheckReturnValue
+    @Nonnull
+    public WebDriver createDriver(@Nonnull DesiredCapabilities desiredCapabilities) {
       return driver;
     }
   }

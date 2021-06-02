@@ -1,6 +1,5 @@
 package com.codeborne.selenide.files;
 
-import com.codeborne.selenide.proxy.DownloadedFile;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -8,7 +7,8 @@ import java.io.File;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ExtensionFilterTest {
+final class ExtensionFilterTest {
+  private static final String FILTER_DESCRIPTION = "with extension \"pdf\"";
   private final FileFilter filter = new ExtensionFilter("pdf");
 
   @Test
@@ -25,7 +25,16 @@ class ExtensionFilterTest {
 
   @Test
   void description() {
-    assertThat(filter.description()).isEqualTo(" with extension \"pdf\"");
+    assertThat(filter.description()).isEqualTo(FILTER_DESCRIPTION);
   }
 
+  @Test
+  void hasToString() {
+    assertThat(filter).hasToString(FILTER_DESCRIPTION);
+  }
+
+  @Test
+  void isNotEmpty() {
+    assertThat(filter.isEmpty()).isFalse();
+  }
 }

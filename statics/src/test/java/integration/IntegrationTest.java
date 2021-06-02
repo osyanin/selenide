@@ -4,6 +4,7 @@ import com.automation.remarks.junit5.VideoExtension;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.junit5.ScreenShooterExtension;
+import com.codeborne.selenide.junit5.TextReportExtension;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,9 +14,11 @@ import org.openqa.selenium.MutableCapabilities;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
 
+import static com.codeborne.selenide.AssertionMode.STRICT;
 import static com.codeborne.selenide.Browsers.CHROME;
 import static com.codeborne.selenide.Configuration.browserSize;
 import static com.codeborne.selenide.Configuration.clickViaJs;
+import static com.codeborne.selenide.Configuration.downloadsFolder;
 import static com.codeborne.selenide.Configuration.fastSetValue;
 import static com.codeborne.selenide.Configuration.timeout;
 import static com.codeborne.selenide.Configuration.versatileSetValue;
@@ -36,14 +39,17 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
   }
 
   @BeforeEach
+  @AfterEach
   final void setUpEach() {
     resetSettings();
   }
 
+  @BeforeEach
   @AfterEach
-  public void restoreDefaultProperties() {
+  final void restoreDefaultProperties() {
     timeout = 1;
     clickViaJs = false;
+    downloadsFolder = "build/downloads";
   }
 
   @AfterAll
@@ -62,9 +68,11 @@ public abstract class IntegrationTest extends BaseIntegrationTest {
     fastSetValue = false;
     versatileSetValue = false;
     browserSize = System.getProperty("selenide.browserSize", "1200x960");
+    Configuration.assertionMode = STRICT;
     Configuration.proxyPort = 0;
     Configuration.proxyHost = "";
-    useProxy(true);
+    useProxy(false);
+    Configuration.fileDownload = HTTPGET;
   }
 
   protected void openFile(String fileName) {

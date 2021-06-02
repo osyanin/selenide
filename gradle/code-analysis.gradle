@@ -24,9 +24,11 @@ tasks.withType(SpotBugsTask) {
 }
 
 tasks.withType(Checkstyle) {
-  logging.level = LogLevel.LIFECYCLE
+  maxWarnings = 0
+  showViolations = true
   reports {
-    html.stylesheet = resources.text.fromFile(rootProject.file('config/checkstyle/checkstyle-noframes-sorted.xsl'))
+    xml.enabled true
+    html.enabled false
   }
 }
 

@@ -6,33 +6,41 @@ import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.ex.ElementNotFound;
 import org.openqa.selenium.WebElement;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Proxy;
 import java.util.List;
 
-import static com.codeborne.selenide.Condition.visible;
-
+@ParametersAreNonnullByDefault
 public class CollectionElementByCondition extends WebElementSource {
 
-  public static SelenideElement wrap(WebElementsCollection collection, Condition condition) {
+  @CheckReturnValue
+  @Nonnull
+  public static SelenideElement wrap(CollectionSource collection, Condition condition) {
     return (SelenideElement) Proxy.newProxyInstance(
         collection.getClass().getClassLoader(), new Class<?>[]{SelenideElement.class},
         new SelenideElementProxy(new CollectionElementByCondition(collection, condition)));
   }
 
-  private final WebElementsCollection collection;
+  private final CollectionSource collection;
   private final Condition condition;
 
-  CollectionElementByCondition(WebElementsCollection collection, Condition condition) {
+  CollectionElementByCondition(CollectionSource collection, Condition condition) {
     this.collection = collection;
     this.condition = condition;
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public Driver driver() {
     return collection.driver();
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public WebElement getWebElement() {
     List<WebElement> list = collection.getElements();
 
@@ -42,26 +50,13 @@ public class CollectionElementByCondition extends WebElementSource {
       }
     }
 
-    throw new ElementNotFound(driver(), getSearchCriteria(), condition);
+    throw new ElementNotFound(driver(), description(), condition);
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public String getSearchCriteria() {
     return collection.description() + ".findBy(" + condition + ")";
   }
-
-
-  @Override
-  public ElementNotFound createElementNotFoundError(Condition condition, Throwable lastError) {
-    if (collection.getElements().isEmpty()) {
-      return new ElementNotFound(driver(), collection.description(), visible, lastError);
-    }
-    return super.createElementNotFoundError(condition, lastError);
-  }
-
-  @Override
-  public String toString() {
-    return getSearchCriteria();
-  }
-
 }

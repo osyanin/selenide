@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class InputFieldTest extends ITest {
+final class InputFieldTest extends ITest {
   @BeforeEach
   void setup() {
     openFile("html5_input.html?" + System.currentTimeMillis());
@@ -28,5 +28,9 @@ class InputFieldTest extends ITest {
     input.clear();
     input.setValue("456");
     assertThat(input.getValue()).isEqualTo("456");
+
+    input.setValue("456");
+    input.setValue(null);
+    assertThat(input.getValue()).isEqualTo("");
   }
 }

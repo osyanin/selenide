@@ -17,7 +17,7 @@ import static com.codeborne.selenide.Selenide.$x;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class SelectsTest extends IntegrationTest {
+final class SelectsTest extends IntegrationTest {
 
   @BeforeEach
   void openTestPage() {
@@ -137,6 +137,18 @@ class SelectsTest extends IntegrationTest {
 
     assertThat(select.getSelectedText())
       .isEqualTo("@мыло.ру");
+  }
+
+  @Test
+  void getSelectedText_cannotBeNull() {
+    SelenideElement select = $("select#gender");
+    assertThat(select.getSelectedText()).isEqualTo("");
+
+    select.selectOptionContainingText("emal");
+    assertThat(select.getSelectedText()).isEqualTo("Female");
+
+    assertThatThrownBy(() -> $("select#missing").getSelectedText())
+      .isInstanceOf(ElementNotFound.class);
   }
 
   @Test

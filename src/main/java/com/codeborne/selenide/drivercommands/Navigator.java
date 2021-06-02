@@ -5,22 +5,24 @@ import com.codeborne.selenide.Config;
 import com.codeborne.selenide.Credentials;
 import com.codeborne.selenide.Driver;
 import com.codeborne.selenide.SelenideDriver;
-import com.codeborne.selenide.logevents.SelenideLog;
 import com.codeborne.selenide.logevents.SelenideLogger;
 import com.codeborne.selenide.proxy.AuthenticationFilter;
 import com.codeborne.selenide.proxy.SelenideProxyServer;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebDriverException;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.net.URL;
 import java.util.regex.Pattern;
 
 import static com.codeborne.selenide.FileDownloadMode.PROXY;
-import static com.codeborne.selenide.logevents.LogEvent.EventStatus.PASS;
 import static java.util.regex.Pattern.DOTALL;
 
+@ParametersAreNonnullByDefault
 public class Navigator {
-  private static final Pattern ABSOLUTE_URL_REGEX = Pattern.compile("^[a-zA-Z]+:.*", DOTALL);
+  private static final Pattern ABSOLUTE_URL_REGEX = Pattern.compile("^[a-zA-Z-]+:.*", DOTALL);
 
   private final BasicAuthUrl basicAuthUrl = new BasicAuthUrl();
 
@@ -49,51 +51,38 @@ public class Navigator {
     return selenideProxy.requestFilter("authentication");
   }
 
+  @Nonnull
   String absoluteUrl(Config config, String relativeOrAbsoluteUrl) {
     return isAbsoluteUrl(relativeOrAbsoluteUrl) ? relativeOrAbsoluteUrl : config.baseUrl() + relativeOrAbsoluteUrl;
   }
 
-  private void navigateTo(SelenideDriver driver, String url,
+  private void navigateTo(SelenideDriver driver, String relativeOrAbsoluteUrl,
                           AuthenticationType authenticationType, String domain, String login, String password) {
     checkThatProxyIsEnabled(driver.config());
 
-    url = absoluteUrl(driver.config(), url);
-    url = appendBasicAuthIfNeeded(driver.config(), url, authenticationType, domain, login, password);
+    String absoluteUrl = absoluteUrl(driver.config(), relativeOrAbsoluteUrl);
+    String url = appendBasicAuthIfNeeded(driver.config(), absoluteUrl, authenticationType, domain, login, password);
 
-    SelenideLog log = SelenideLogger.beginStep("open", url);
-    try {
-      WebDriver webDriver = driver.getAndCheckWebDriver();
-      beforeNavigateTo(driver.config(), driver.getProxy(), authenticationType, domain, login, password);
-      webDriver.navigate().to(url);
-      SelenideLogger.commitStep(log, PASS);
-    }
-    catch (WebDriverException e) {
-      SelenideLogger.commitStep(log, e);
-      e.addInfo("selenide.url", url);
-      e.addInfo("selenide.baseUrl", driver.config().baseUrl());
-      if (driver.config().remote() != null) {
-        e.addInfo("selenide.remote", driver.config().remote());
+    SelenideLogger.run("open", url, () -> {
+      try {
+        WebDriver webDriver = driver.getAndCheckWebDriver();
+        beforeNavigateTo(driver.config(), driver.getProxy(), authenticationType, domain, login, password);
+        webDriver.navigate().to(url);
       }
-      throw e;
-    }
-    catch (RuntimeException | Error e) {
-      SelenideLogger.commitStep(log, e);
-      throw e;
-    }
+      catch (WebDriverException e) {
+        e.addInfo("selenide.url", url);
+        e.addInfo("selenide.baseUrl", driver.config().baseUrl());
+        if (driver.config().remote() != null) {
+          e.addInfo("selenide.remote", driver.config().remote());
+        }
+        throw e;
+      }
+    });
   }
 
   public void open(SelenideDriver driver) {
     checkThatProxyIsEnabled(driver.config());
-
-    SelenideLog log = SelenideLogger.beginStep("open", "");
-    try {
-      driver.getAndCheckWebDriver();
-      SelenideLogger.commitStep(log, PASS);
-    }
-    catch (RuntimeException | Error e) {
-      SelenideLogger.commitStep(log, e);
-      throw e;
-    }
+    SelenideLogger.run("open", "", driver::getAndCheckWebDriver);
   }
 
   private void checkThatProxyIsEnabled(Config config) {
@@ -103,7 +92,7 @@ public class Navigator {
     }
   }
 
-  private void checkThatProxyIsStarted(SelenideProxyServer selenideProxy) {
+  private void checkThatProxyIsStarted(@Nullable SelenideProxyServer selenideProxy) {
     if (selenideProxy == null) {
       throw new IllegalStateException("config.proxyEnabled == true but proxy server is not created. " +
         "You need to call `setWebDriver(webDriver, selenideProxy)` instead of `setWebDriver(webDriver)` if you need to use proxy.");
@@ -113,7 +102,7 @@ public class Navigator {
     }
   }
 
-  private void beforeNavigateTo(Config config, SelenideProxyServer selenideProxy,
+  private void beforeNavigateTo(Config config, @Nullable SelenideProxyServer selenideProxy,
                                 AuthenticationType authenticationType, String domain, String login, String password) {
     if (config.proxyEnabled()) {
       checkThatProxyIsStarted(selenideProxy);
@@ -163,14 +152,20 @@ public class Navigator {
   }
 
   public void back(Driver driver) {
-    driver.getWebDriver().navigate().back();
+    SelenideLogger.run("back", "", () -> {
+      driver.getWebDriver().navigate().back();
+    });
   }
 
   public void forward(Driver driver) {
-    driver.getWebDriver().navigate().forward();
+    SelenideLogger.run("forward", "", () -> {
+      driver.getWebDriver().navigate().forward();
+    });
   }
 
   public void refresh(Driver driver) {
-    driver.getWebDriver().navigate().refresh();
+    SelenideLogger.run("refresh", "", () -> {
+      driver.getWebDriver().navigate().refresh();
+    });
   }
 }

@@ -5,24 +5,33 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.interactions.Actions;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
 /**
  * A dummy `Driver` implementation used in tests.
  */
+@ParametersAreNonnullByDefault
 public class DriverStub implements Driver {
   private final Config config;
   private final Browser browser;
   private final WebDriver webDriver;
   private final SelenideProxyServer proxy;
+  private final DownloadsFolder browserDownloadsFolder = new SharedDownloadsFolder("build/downloads/45");
 
   public DriverStub() {
     this("zopera");
   }
 
   public DriverStub(String browser) {
-    this(new SelenideConfig(), new Browser(browser, false), null, null);
+    this(new SelenideConfig(), new Browser(browser, false), new DummyWebDriver(), null);
   }
 
-  public DriverStub(Config config, Browser browser, WebDriver webDriver, SelenideProxyServer proxy) {
+  public DriverStub(Config config, Browser browser,
+                    WebDriver webDriver,
+                    @Nullable SelenideProxyServer proxy) {
     this.config = config;
     this.browser = browser;
     this.webDriver = webDriver;
@@ -30,21 +39,28 @@ public class DriverStub implements Driver {
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public Config config() {
     return config;
   }
 
   @Override
+  @CheckReturnValue
   public boolean hasWebDriverStarted() {
     return webDriver != null;
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public Browser browser() {
     return browser;
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public WebDriver getWebDriver() {
     return webDriver;
   }
@@ -55,8 +71,17 @@ public class DriverStub implements Driver {
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public WebDriver getAndCheckWebDriver() {
     return webDriver;
+  }
+
+  @Override
+  @CheckReturnValue
+  @Nullable
+  public DownloadsFolder browserDownloadsFolder() {
+    return browserDownloadsFolder;
   }
 
   @Override
@@ -65,6 +90,7 @@ public class DriverStub implements Driver {
   }
 
   @Override
+  @CheckReturnValue
   public boolean supportsJavascript() {
     return hasWebDriverStarted() && webDriver instanceof JavascriptExecutor;
   }
@@ -82,17 +108,21 @@ public class DriverStub implements Driver {
   }
 
   @Override
+  @CheckReturnValue
+  @Nonnull
   public String getUserAgent() {
     return "zhopera";
   }
 
   @Override
-  public SelenideTargetLocator switchTo() {
-    return new SelenideTargetLocator(config(), getWebDriver());
+  @CheckReturnValue
+  @Nonnull  public SelenideTargetLocator switchTo() {
+    return new SelenideTargetLocator(this);
   }
 
   @Override
-  public Actions actions() {
+  @CheckReturnValue
+  @Nonnull  public Actions actions() {
     return new Actions(getWebDriver());
   }
 }

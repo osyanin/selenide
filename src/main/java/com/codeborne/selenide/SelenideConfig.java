@@ -18,8 +18,10 @@ public class SelenideConfig implements Config {
   private String browserPosition = System.getProperty("selenide.browserPosition");
   private boolean startMaximized = Boolean.parseBoolean(System.getProperty("selenide.startMaximized", "false"));
   private boolean driverManagerEnabled = Boolean.parseBoolean(System.getProperty("selenide.driverManagerEnabled", "true"));
+  private boolean webdriverLogsEnabled = Boolean.parseBoolean(System.getProperty("selenide.webdriverLogsEnabled", "false"));
   private String browserBinary = System.getProperty("selenide.browserBinary", "");
   private String pageLoadStrategy = System.getProperty("selenide.pageLoadStrategy", "normal");
+  private long pageLoadTimeout = Long.parseLong(System.getProperty("selenide.pageLoadTimeout", "30000"));
   private MutableCapabilities browserCapabilities = new DesiredCapabilities();
 
   private String baseUrl = System.getProperty("selenide.baseUrl", "http://localhost:8080");
@@ -312,6 +314,15 @@ public class SelenideConfig implements Config {
     this.driverManagerEnabled = driverManagerEnabled;
     return this;
   }
+  @Override
+  public boolean webdriverLogsEnabled() {
+    return webdriverLogsEnabled;
+  }
+
+  public SelenideConfig webdriverLogsEnabled(boolean webdriverLogsEnabled) {
+    this.webdriverLogsEnabled = webdriverLogsEnabled;
+    return this;
+  }
 
   @Override
   public String browserBinary() {
@@ -328,8 +339,18 @@ public class SelenideConfig implements Config {
     return pageLoadStrategy;
   }
 
+  @Override
+  public long pageLoadTimeout() {
+    return pageLoadTimeout;
+  }
+
   public SelenideConfig pageLoadStrategy(String pageLoadStrategy) {
     this.pageLoadStrategy = pageLoadStrategy;
+    return this;
+  }
+
+  public SelenideConfig pageLoadTimeout(long pageLoadTimeout) {
+    this.pageLoadTimeout = pageLoadTimeout;
     return this;
   }
 

@@ -10,7 +10,7 @@ import static com.codeborne.selenide.Condition.appear;
 import static java.lang.System.lineSeparator;
 import static org.mockito.Mockito.mock;
 
-class ElementShouldNotTest implements WithAssertions {
+final class ElementShouldNotTest implements WithAssertions {
   private final Driver driver = new DriverStub();
 
   @Test
@@ -20,7 +20,6 @@ class ElementShouldNotTest implements WithAssertions {
     assertThat(elementShould).hasMessage("Element should not be visible {by.name: selenide}" + lineSeparator() +
       "Element: '<null displayed:false></null>'" + lineSeparator() +
       "Actual value: visible:false" + lineSeparator() +
-      "Screenshot: null" + lineSeparator() +
       "Timeout: 0 ms." + lineSeparator() +
       "Caused by: java.lang.Throwable: Error message");
   }

@@ -2,7 +2,10 @@ package com.codeborne.selenide;
 
 import com.codeborne.selenide.collections.AllMatch;
 import com.codeborne.selenide.collections.AnyMatch;
+import com.codeborne.selenide.collections.ContainExactTextsCaseSensitive;
 import com.codeborne.selenide.collections.ExactTexts;
+import com.codeborne.selenide.collections.ExactTextsCaseSensitiveInAnyOrder;
+import com.codeborne.selenide.collections.ItemWithText;
 import com.codeborne.selenide.collections.ListSize;
 import com.codeborne.selenide.collections.NoneMatch;
 import com.codeborne.selenide.collections.SizeGreaterThan;
@@ -12,18 +15,25 @@ import com.codeborne.selenide.collections.SizeLessThanOrEqual;
 import com.codeborne.selenide.collections.SizeNotEqual;
 import com.codeborne.selenide.collections.Texts;
 import com.codeborne.selenide.collections.TextsInAnyOrder;
-import com.codeborne.selenide.impl.WebElementsCollection;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import com.google.errorprone.annotations.CheckReturnValue;
+import com.codeborne.selenide.impl.CollectionSource;
+
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
 import java.util.function.Predicate;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public abstract class CollectionCondition implements Predicate<List<WebElement>> {
   protected String explanation;
 
-  public abstract void fail(WebElementsCollection collection, List<WebElement> elements, Exception lastError, long timeoutMs);
+  public abstract void fail(CollectionSource collection,
+                            @Nullable List<WebElement> elements,
+                            @Nullable Exception lastError,
+                            long timeoutMs);
 
   public static CollectionCondition empty = size(0);
 
@@ -154,6 +164,85 @@ public abstract class CollectionCondition implements Predicate<List<WebElement>>
   }
 
   /**
+   * Checks if given collection has an element with given text.
+   * The condition is satisfied if one or more elements in this collection have exactly the given text.
+   *
+   * @param expectedText The expected text in the collection
+   */
+  @CheckReturnValue
+  public static CollectionCondition itemWithText(String expectedText) {
+    return new ItemWithText(expectedText);
+  }
+
+  /**
+   * Check that the given collection contains all elements with given texts.
+   * <p> NB! This condition is case-sensitive and checks for exact matches! </p>
+   * Examples:
+   * <pre code='java'>
+   * // collection 1: [Tom, Dick, Harry]
+   * $$("li.odd").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // success
+   * // collection 2: [Tom, John, Dick, Harry]
+   * $$("li.even").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // success
+   * // collection 3: [John, Dick, Tom, Paul]
+   * $$("li.first").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // fail ("Harry" is missing)
+   * // collection 4: [Tom, Dick, hArRy]
+   * $$("li.last").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // fail ("Harry" is missing)
+   * </pre>
+   *
+   * @param expectedTexts the expected texts that the collection should contain
+   */
+  @CheckReturnValue
+  public static CollectionCondition containExactTextsCaseSensitive(String... expectedTexts) {
+    return new ContainExactTextsCaseSensitive(expectedTexts);
+  }
+
+  /**
+   * Check that the given collection contains all elements with given texts.
+   * <p> NB! This condition is case-sensitive and checks for exact matches! </p>
+   * Examples:
+   * <pre code='java'>
+   * // collection 1: [Tom, Dick, Harry]
+   * $$("li.odd").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // success
+   * // collection 2: [Tom, John, Dick, Harry]
+   * $$("li.even").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // success
+   * // collection 3: [John, Dick, Tom, Paul]
+   * $$("li.first").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // fail ("Harry" is missing)
+   * // collection 4: [Tom, Dick, hArRy]
+   * $$("li.last").should(containExactTextsCaseSensitive("Tom", "Dick", "Harry")); // fail ("Harry" is missing)
+   * </pre>
+   *
+   * @param expectedTexts the expected texts that the collection should contain
+   */
+  @CheckReturnValue
+  public static CollectionCondition containExactTextsCaseSensitive(List<String> expectedTexts) {
+    return new ContainExactTextsCaseSensitive(expectedTexts);
+  }
+
+  /**
+   * Checks that given collection has given texts in any order (each collection element EQUALS TO corresponding text)
+   *
+   * <p>NB! Case sensitive</p>
+   *
+   * @param expectedTexts Expected texts in any order in the collection
+   */
+  @CheckReturnValue
+  public static CollectionCondition exactTextsCaseSensitiveInAnyOrder(List<String> expectedTexts) {
+    return new ExactTextsCaseSensitiveInAnyOrder(expectedTexts);
+  }
+
+  /**
+   * Checks that given collection has given texts in any order (each collection element EQUALS TO corresponding text)
+   *
+   * <p>NB! Case sensitive</p>
+   *
+   * @param expectedTexts Expected texts in any order in the collection
+   */
+  @CheckReturnValue
+  public static CollectionCondition exactTextsCaseSensitiveInAnyOrder(String... expectedTexts) {
+    return new ExactTextsCaseSensitiveInAnyOrder(expectedTexts);
+  }
+
+  /**
    * Wraps CollectionCondition without any changes except toString() method
    * where explanation string (because) are being appended
    */
@@ -172,7 +261,10 @@ public abstract class CollectionCondition implements Predicate<List<WebElement>>
     }
 
     @Override
-    public void fail(WebElementsCollection collection, List<WebElement> elements, Exception lastError, long timeoutMs) {
+    public void fail(CollectionSource collection,
+                     @Nullable List<WebElement> elements,
+                     @Nullable Exception lastError,
+                     long timeoutMs) {
       delegate.fail(collection, elements, lastError, timeoutMs);
     }
 

@@ -1,9 +1,10 @@
 package com.codeborne.selenide;
 
 import com.codeborne.selenide.ex.DialogTextMismatch;
-import com.google.errorprone.annotations.CheckReturnValue;
+import javax.annotation.CheckReturnValue;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.OutputType;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -139,6 +140,7 @@ public class Selenide {
    * Open a web page and create PageObject for it.
    * @return PageObject of given class
    */
+  @CheckReturnValue
   @Nonnull
   public static <PageObjectClass> PageObjectClass open(String relativeOrAbsoluteUrl,
                                                        Class<PageObjectClass> pageObjectClassClass) {
@@ -149,6 +151,7 @@ public class Selenide {
    * Open a web page and create PageObject for it.
    * @return PageObject of given class
    */
+  @CheckReturnValue
   @Nonnull
   public static <PageObjectClass> PageObjectClass open(URL absoluteUrl,
                                                        Class<PageObjectClass> pageObjectClassClass) {
@@ -159,6 +162,7 @@ public class Selenide {
    * Open a web page using Basic Auth credentials and create PageObject for it.
    * @return PageObject of given class
    */
+  @CheckReturnValue
   @Nonnull
   public static <PageObjectClass> PageObjectClass open(String relativeOrAbsoluteUrl,
                                                        String domain, String login, String password,
@@ -170,6 +174,7 @@ public class Selenide {
    * Open a web page using Basic Auth credentials and create PageObject for it.
    * @return PageObject of given class
    */
+  @CheckReturnValue
   @Nonnull
   public static <PageObjectClass> PageObjectClass open(URL absoluteUrl, String domain, String login, String password,
                                                        Class<PageObjectClass> pageObjectClassClass) {
@@ -230,6 +235,7 @@ public class Selenide {
    * @return title of the page
    */
   @CheckReturnValue
+  @Nullable
   public static String title() {
     return getSelenideDriver().title();
   }
@@ -252,9 +258,22 @@ public class Selenide {
    * @param fileName Name of file (without extension) to save HTML and PNG to
    * @return The name of resulting file
    */
-  @Nonnull
+  @CheckReturnValue
+  @Nullable
   public static String screenshot(String fileName) {
-    return Screenshots.takeScreenShot(fileName);
+    return getSelenideDriver().screenshot(fileName);
+  }
+
+  /**
+   * Take the screenshot of current page and return it.
+   * @param outputType type of the returned screenshot
+   * @return The screenshot (as bytes, base64 or temporary file)
+   *         or null if webdriver does not support taking screenshots.
+   */
+  @CheckReturnValue
+  @Nullable
+  public static <T> T screenshot(OutputType<T> outputType) {
+    return getSelenideDriver().screenshot(outputType);
   }
 
   /**
@@ -271,10 +290,11 @@ public class Selenide {
   }
 
   /**
-   * Locates the first element matching given CSS selector
-   * ATTENTION! This method doesn't start any search yet!
+   * Locates the first element matching given CSS selector (lazy evaluation)
+   *
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -283,10 +303,11 @@ public class Selenide {
   }
 
   /**
-   * Locates the first element matching given XPATH expression
-   * ATTENTION! This method doesn't start any search yet!
+   * Locates the first element matching given XPATH expression (lazy evaluation)
+   *
    * @param xpathExpression any XPATH expression //*[@id='value'] //E[contains(@A, 'value')]
    * @return SelenideElement which locates elements via XPath
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -295,10 +316,11 @@ public class Selenide {
   }
 
   /**
-   * Locates the first element matching given CSS selector
-   * ATTENTION! This method doesn't start any search yet!
+   * Locates the first element matching given CSS selector (lazy evaluation)
+   *
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -321,10 +343,11 @@ public class Selenide {
    * @see  #$(String)
    *
    * Locates the first element matching given CSS selector
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param parent the WebElement to search elements in
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @Nonnull
@@ -333,11 +356,12 @@ public class Selenide {
   }
 
   /**
-   * Locates the Nth element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   * Locates the Nth element matching given criteria (lazy evaluation)
+   *
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @param index 0..N
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -351,11 +375,12 @@ public class Selenide {
    * @see  #$(String, int)
    *
    * Locates the Nth element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param parent the WebElement to search elements in
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @param index 0..N
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -370,10 +395,11 @@ public class Selenide {
    * @see  #$(By)
    *
    * Locates the first element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param parent the WebElement to search elements in
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -388,11 +414,12 @@ public class Selenide {
    * @see  #$(By, int)
    *
    * Locates the Nth element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param parent the WebElement to search elements in
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @param index 0..N
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -411,14 +438,15 @@ public class Selenide {
   }
 
   /**
-   * Locates all elements matching given CSS selector.
-   * ATTENTION! This method doesn't start any search yet!
+   * Locates all elements matching given CSS selector (lazy evaluation).
+   *
    * Methods returns an ElementsCollection which is a list of WebElement objects that can be iterated,
    * and at the same time is implementation of WebElement interface,
    * meaning that you can call methods .sendKeys(), click() etc. on it.
    *
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @return empty list if element was no found
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -427,13 +455,15 @@ public class Selenide {
   }
 
   /**
-   * Locates all elements matching given XPATH expression.
-   * ATTENTION! This method doesn't start any search yet!
+   * Locates all elements matching given XPATH expression (lazy evaluation)
+   *
    * Methods returns an ElementsCollection which is a list of WebElement objects that can be iterated,
    * and at the same time is implementation of WebElement interface,
    * meaning that you can call methods .sendKeys(), click() etc. on it.
+   *
    * @param xpathExpression any XPATH expression //*[@id='value'] //E[contains(@A, 'value')]
    * @return ElementsCollection which locates elements via XPath
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -443,13 +473,14 @@ public class Selenide {
 
   /**
    * Locates all elements matching given CSS selector.
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * Methods returns an ElementsCollection which is a list of WebElement objects that can be iterated,
    * and at the same time is implementation of WebElement interface,
    * meaning that you can call methods .sendKeys(), click() etc. on it.
    *
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @return empty list if element was no found
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -463,7 +494,7 @@ public class Selenide {
    * @see  #$$(String)
    *
    * Locates all elements matching given CSS selector inside given parent element
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * Methods returns an ElementsCollection which is a list of WebElement objects that can be iterated,
    * and at the same time is implementation of WebElement interface,
    * meaning that you can call methods .sendKeys(), click() etc. on it.
@@ -471,6 +502,7 @@ public class Selenide {
    * @param parent the WebElement to search elements in
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @return empty list if element was no found
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -480,13 +512,14 @@ public class Selenide {
   }
 
   /**
+   * Locates all elements matching given criteria inside given parent element
+   *
    * @deprecated please use $(parent).$$(By) which is the same
    * (method will not be removed until 4.x or later)
-   * @see  #$$(By)
    *
-   * Locates all elements matching given criteria inside given parent element
-   * ATTENTION! This method doesn't start any search yet!
+   * @see #$$(By)
    * @see Selenide#$$(WebElement, String)
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -510,9 +543,10 @@ public class Selenide {
 
   /**
    * Locates the first element matching given CSS selector
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -522,9 +556,10 @@ public class Selenide {
 
   /**
    * Locates the first element matching given CSS selector
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -534,10 +569,11 @@ public class Selenide {
 
   /**
    * Locates the Nth element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @param index 0..N
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -547,10 +583,11 @@ public class Selenide {
 
   /**
    * Locates the Nth element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @param index 0..N
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -573,13 +610,14 @@ public class Selenide {
 
   /**
    * Locates all elements matching given CSS selector.
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * Methods returns an ElementsCollection which is a list of WebElement objects that can be iterated,
    * and at the same time is implementation of WebElement interface,
    * meaning that you can call methods .sendKeys(), click() etc. on it.
    *
    * @param cssSelector any CSS selector like "input[name='first_name']" or "#messages .new_message"
    * @return empty list if element was no found
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -589,13 +627,14 @@ public class Selenide {
 
   /**
    * Locates all elements matching given CSS selector.
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * Methods returns an ElementsCollection which is a list of WebElement objects that can be iterated,
    * and at the same time is implementation of WebElement interface,
    * meaning that you can call methods .sendKeys(), click() etc. on it.
    *
    * @param seleniumSelector any Selenium selector like By.id(), By.name() etc.
    * @return empty list if element was no found
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @CheckReturnValue
   @Nonnull
@@ -607,9 +646,10 @@ public class Selenide {
    * @deprecated please use element(criteria) which is the same
    * (method will not be removed until 4.x or later)
    * Locates the first element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param criteria instance of By: By.id(), By.className() etc.
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -622,10 +662,11 @@ public class Selenide {
    * @deprecated please use element(criteria, index) which is the same
    * (method will not be removed until 4.x or later)
    * Locates the Nth element matching given criteria
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param criteria instance of By: By.id(), By.className() etc.
    * @param index 0..N
    * @return SelenideElement
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -638,9 +679,10 @@ public class Selenide {
    * @deprecated please use elements(criteria) which is the same
    * (method will not be removed until 4.x or later)
    * Locates all elements matching given CSS selector
-   * ATTENTION! This method doesn't start any search yet!
+   *
    * @param criteria instance of By: By.id(), By.className() etc.
    * @return empty list if element was no found
+   * @see <a href="https://github.com/selenide/selenide/wiki/lazy-loading">Lazy loading</a>
    */
   @Deprecated
   @CheckReturnValue
@@ -759,6 +801,7 @@ public class Selenide {
    * @return SelenideTargetLocator
    */
   @Nonnull
+  @CheckReturnValue
   public static SelenideTargetLocator switchTo() {
     return getSelenideDriver().driver().switchTo();
   }
@@ -837,6 +880,8 @@ public class Selenide {
   /**
    * Same as com.codeborne.selenide.Selenide#getWebDriverLogs(java.lang.String, java.util.logging.Level)
    */
+  @CheckReturnValue
+  @Nonnull
   public static List<String> getWebDriverLogs(String logType) {
     return getSelenideDriver().getWebDriverLogs().logs(logType);
   }
@@ -870,6 +915,8 @@ public class Selenide {
    * @see LogType
    * @see Level
    */
+  @Nonnull
+  @CheckReturnValue
   public static List<String> getWebDriverLogs(String logType, Level logLevel) {
     return getSelenideDriver().getWebDriverLogs().logs(logType, logLevel);
   }
@@ -898,6 +945,7 @@ public class Selenide {
    * @return browser user agent
    */
   @Nonnull
+  @CheckReturnValue
   public static String getUserAgent() {
     return getSelenideDriver().driver().getUserAgent();
   }
@@ -907,6 +955,7 @@ public class Selenide {
    *
    * Useful if you need to scroll down by x pixels unknown number of times.
    */
+  @CheckReturnValue
   public static boolean atBottom() {
     return getSelenideDriver().atBottom();
   }
@@ -919,6 +968,7 @@ public class Selenide {
    * Download fails if default timeout (Configuration.timeout) is exceeded
    */
   @Nonnull
+  @CheckReturnValue
   public static File download(String url) throws IOException, URISyntaxException {
     return getSelenideDriver().download(url);
   }
@@ -927,6 +977,7 @@ public class Selenide {
    * @see #download(String)
    */
   @Nonnull
+  @CheckReturnValue
   public static File download(URI url) throws IOException {
     return getSelenideDriver().download(url);
   }
@@ -935,6 +986,7 @@ public class Selenide {
    * @see #download(String, long)
    */
   @Nonnull
+  @CheckReturnValue
   public static File download(URI url, long timeoutMs) throws IOException {
     return getSelenideDriver().download(url, timeoutMs);
   }
@@ -955,7 +1007,52 @@ public class Selenide {
    * @throws URISyntaxException if given url has invalid syntax
    */
   @Nonnull
+  @CheckReturnValue
   public static File download(String url, long timeoutMs) throws IOException, URISyntaxException {
     return getSelenideDriver().download(new URI(url), timeoutMs);
+  }
+
+  /**
+   * Access browser's local storage.
+   * Allows setting, getting, removing items as well as getting the size and clear the storage.
+   *
+   * @return LocalStorage
+   * @since 5.15.0
+   */
+  @Nonnull
+  @CheckReturnValue
+  public static LocalStorage localStorage() {
+    return getSelenideDriver().getLocalStorage();
+  }
+
+  /**
+   * Access browser's session storage.
+   * Allows setting, getting, removing items as well as getting the size, check for contains item and clear the storage.
+   *
+   * @return sessionStorage
+   * @since 5.18.1
+   */
+  @Nonnull
+  @CheckReturnValue
+  public static SessionStorage sessionStorage() {
+    return getSelenideDriver().getSessionStorage();
+  }
+
+  /**
+   * Provide access to system clipboard, allows get and set String content.
+   * Default implementation acts via {@link java.awt.Toolkit} and supports only local runs.
+   *
+   * Remote runs support can be implemented via plugins.
+   * Plugin for Selenoid will be released soon.
+   *
+   * Pay attention that Clipboard is shared resource for instance where tests runs
+   * and keep in mind while developing test suite with multiple tests for clipboard.
+   *
+   * @return Clipboard
+   */
+  @Nonnull
+  @CheckReturnValue
+  public static Clipboard clipboard() {
+    return getSelenideDriver().getClipboard();
   }
 }

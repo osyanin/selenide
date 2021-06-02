@@ -3,8 +3,11 @@ package com.codeborne.selenide.collections;
 import com.codeborne.selenide.impl.Html;
 import org.openqa.selenium.WebElement;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
 public class Texts extends ExactTexts {
   public Texts(String... expectedTexts) {
     super(expectedTexts);
@@ -14,6 +17,7 @@ public class Texts extends ExactTexts {
     super(expectedTexts);
   }
 
+  @CheckReturnValue
   @Override
   public boolean test(List<WebElement> elements) {
     if (elements.size() != expectedTexts.size()) {
@@ -32,6 +36,6 @@ public class Texts extends ExactTexts {
 
   @Override
   public String toString() {
-    return "Texts " + expectedTexts;
+    return "texts " + expectedTexts;
   }
 }

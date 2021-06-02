@@ -1,111 +1,140 @@
-jar {
-  manifest {
-    attributes(
-      "Automatic-Module-Name": project.group + '.' + project.name,
-      "Implementation-Title": project.group + '.' + project.name,
-      "Implementation-Version": version,
-      "Implementation-Vendor": "Codeborne")
+allprojects {
+  tasks.withType(Jar) {
+    manifest {
+      attributes(
+        "Automatic-Module-Name": project.group + '.' + project.name,
+        "Implementation-Title": project.group + '.' + project.name,
+        "Implementation-Version": archiveVersion,
+        "Implementation-Vendor": "selenide.org")
+    }
   }
-  from sourceSets.main.output
-  from sourceSets.staticFacade.output
+  tasks.withType(Javadoc) {
+    failOnError = false
+  }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier = 'sources'
-  from sourceSets.main.allSource
-  from sourceSets.staticFacade.allSource
+task allprojectsJar(type: Jar, dependsOn: classes) {
+  from allprojects.sourceSets.main.output
+  destinationDir file("${project.buildDir}/libs-to-upload")
 }
 
-javadoc {
-  failOnError = false
-  source = sourceSets.main.allJava + sourceSets.staticFacade.allJava
+task allprojectsSourcesJar(type: Jar) {
+  archiveClassifier = 'sources'
+  from allprojects.sourceSets.main.allSource
+  destinationDir file("${project.buildDir}/libs-to-upload")
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier = 'javadoc'
-  from javadoc.destinationDir
+task allprojectsJavadoc(type: Javadoc, dependsOn: classes) {
+  source = allprojects.sourceSets.main.allJava
+  destinationDir = file("${project.docsDir}/javadoc-to-upload")
+  classpath = project.sourceSets.main.compileClasspath
+  classpath += project(":statics").sourceSets.main.compileClasspath
+  classpath += project(":modules:grid").sourceSets.main.compileClasspath
+  classpath += project(":modules:junit4").sourceSets.main.compileClasspath
+  classpath += project(":modules:testng").sourceSets.main.compileClasspath
 }
 
-artifacts {
-  archives jar
-  archives sourcesJar
-  archives javadocJar
+task allprojectsJavadocJar(type: Jar, dependsOn: allprojectsJavadoc) {
+  archiveClassifier = 'javadoc'
+  from allprojectsJavadoc.destinationDir
+  destinationDir file("${project.buildDir}/libs-to-upload")
 }
-
 
 if (project.hasProperty("signing.keyId")) {
   apply plugin: 'signing'
+  apply plugin: 'maven-publish'
 
   signing {
-    sign configurations.archives
+    afterEvaluate {
+      sign publishing.publications.mavenJava
+    }
   }
 
-  uploadArchives {
+  artifacts {
+    archives allprojectsJar
+    archives allprojectsSourcesJar
+    archives allprojectsJavadocJar
+  }
+
+  publishing {
     repositories {
-      mavenDeployer {
-        beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-        repository(url: project.version.endsWith("-SNAPSHOT") ?
+      maven {
+        name 'Maven'
+        url project.version.endsWith("-SNAPSHOT") ?
           'https://oss.sonatype.org/content/repositories/snapshots/' :
-          'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-          authentication(userName: "$sonatypeUsername", password: "$sonatypePassword")
+          'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+        credentials {
+          username "$sonatypeUsername"
+          password "$sonatypePassword"
         }
+      }
+    }
+    publications {
+      mavenJava(MavenPublication) {
+        groupId "${project.group}"
+        artifactId "${project.name}"
 
-        pom.project {
-          name archivesBaseName
-          packaging 'jar'
-          description 'Selenide = concise API for Selenium WebDriver'
-          url 'https://github.com/codeborne/selenide'
+        artifact(allprojectsJar)
+        artifact(allprojectsSourcesJar)
+        artifact(allprojectsJavadocJar)
 
-          scm {
-            url 'scm:git@github.com:codeborne/selenide.git'
-            connection 'scm:git@github.com:codeborne/selenide.git'
-            developerConnection 'scm:git@github.com:codeborne/selenide.git'
-          }
-
+        pom {
+          name = archivesBaseName
+          description = 'Selenide = concise API for Selenium WebDriver'
+          url = 'https://github.com/selenide/selenide'
           licenses {
             license {
-              name 'MIT'
-              url 'https://opensource.org/licenses/MIT'
-              distribution 'repo'
+              name = 'MIT'
+              url = 'https://opensource.org/licenses/MIT'
             }
           }
-
           developers {
             developer {
-              id 'asolntsev'
-              name 'Andrei Solntsev'
+              id = 'asolntsev'
+              name = 'Andrei Solntsev'
             }
             developer {
-              id 'BorisOsipov'
-              name 'Boris Osipov'
+              id = 'BorisOsipov'
+              name = 'Boris Osipov'
             }
             developer {
-              id 'rosolko'
-              name 'Aliaksandr Rasolka'
+              id = 'rosolko'
+              name = 'Aliaksandr Rasolka'
             }
             developer {
-              id 'vinogradoff'
-              name 'Alexei Vinogradov'
+              id = 'vinogradoff'
+              name = 'Alexei Vinogradov'
+            }
+            developer {
+              id = 'dstekanov'
+              name = 'Dmytro Stekanov'
             }
           }
-        }
+          scm {
+            connection = 'scm:git@github.com:selenide/selenide.git'
+            developerConnection = 'scm:git@github.com:selenide/selenide.git'
+            url = 'https://github.com/selenide/selenide'
+          }
+          withXml {
+            def dependenciesNode = asNode().appendNode('dependencies')
 
-        //mess with the generated pom to set the 'packaging' tag
-        pom.withXml { XmlProvider xmlProvider ->
-          def xml = xmlProvider.asString()
-          def pomXml = new XmlParser().parse(new ByteArrayInputStream(xml.toString().bytes))
-
-          pomXml.version[0] + { packaging('jar') }
-
-          def newXml = new StringWriter()
-          def printer = new XmlNodePrinter(new PrintWriter(newXml))
-          printer.preserveWhitespace = true
-          printer.print(pomXml)
-          xml.setLength(0)
-          xml.append(newXml.toString())
+            configurations.api.allDependencies.each {
+              def dependencyNode = dependenciesNode.appendNode('dependency')
+              dependencyNode.appendNode('groupId', it.group)
+              dependencyNode.appendNode('artifactId', it.name)
+              dependencyNode.appendNode('version', it.version)
+            }
+            (configurations.implementation.allDependencies-configurations.api.allDependencies).each {
+              def dependencyNode = dependenciesNode.appendNode('dependency')
+              dependencyNode.appendNode('groupId', it.group)
+              dependencyNode.appendNode('artifactId', it.name)
+              dependencyNode.appendNode('version', it.version)
+              dependencyNode.appendNode('scope', 'runtime')
+            }
+          }
         }
       }
     }
   }
 }
+

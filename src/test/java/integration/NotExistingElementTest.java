@@ -17,7 +17,7 @@ import static com.codeborne.selenide.Condition.visible;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class NotExistingElementTest extends ITest {
+final class NotExistingElementTest extends ITest {
   @BeforeEach
   void openPage() {
     openFile("elements_disappear_on_click.html");
@@ -93,18 +93,21 @@ class NotExistingElementTest extends ITest {
   }
 
   @Test
-  void getWrappedElement_shouldNotWait() {
-    setTimeout(4000);
+  void getWrappedElement_waits_untilElementApears() {
+    setTimeout(1000);
     long start = System.nanoTime();
     try {
       assertThatThrownBy(() -> $("#not_exist").getWrappedElement())
-        .isInstanceOf(org.openqa.selenium.NoSuchElementException.class)
-        .hasMessageContaining("Unable to locate element:")
-        .hasMessageContaining("#not_exist");
+        .isInstanceOf(ElementNotFound.class)
+        .hasMessageStartingWith("Element not found {#not_exist}")
+        .hasCauseExactlyInstanceOf(org.openqa.selenium.NoSuchElementException.class)
+        .getCause()
+        .hasMessageContainingAll("Unable to locate element:", "#not_exist");
     }
     finally {
       long end = System.nanoTime();
-      assertThat(TimeUnit.NANOSECONDS.toMillis(end - start)).isLessThan(500);
+      assertThat(TimeUnit.NANOSECONDS.toMillis(end - start))
+        .isBetween(1000L, 3000L);
     }
   }
 

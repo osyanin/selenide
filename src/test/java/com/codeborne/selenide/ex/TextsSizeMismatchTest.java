@@ -8,7 +8,7 @@ import java.util.List;
 import static com.codeborne.selenide.Mocks.mockCollection;
 import static java.util.Arrays.asList;
 
-class TextsSizeMismatchTest implements WithAssertions {
+final class TextsSizeMismatchTest implements WithAssertions {
   private final List<String> actualTexts = asList("Niff", "Naff", "Nuff%");
   private final List<String> expectedTexts = asList("Piff", "Paff", "Puff'\"bro");
 
@@ -23,7 +23,6 @@ class TextsSizeMismatchTest implements WithAssertions {
       "Actual: [Niff, Naff, Nuff%%], List size: 3%n" +
       "Expected: [Piff, Paff, Puff'\"bro], List size: 3%n" +
       "Collection: .characters%n" +
-      "Screenshot: null%n" +
       "Timeout: 9 s."));
   }
 
@@ -39,7 +38,6 @@ class TextsSizeMismatchTest implements WithAssertions {
       "Expected: [Piff, Paff, Puff'\"bro], List size: 3%n" +
       "Because: we expect favorite characters%n" +
       "Collection: .characters%n" +
-      "Screenshot: null%n" +
       "Timeout: 9 s."));
   }
 }

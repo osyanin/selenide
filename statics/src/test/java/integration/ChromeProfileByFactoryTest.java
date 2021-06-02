@@ -7,10 +7,14 @@ import com.codeborne.selenide.webdriver.ChromeDriverFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.chrome.ChromeDriverService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -27,10 +31,10 @@ import static org.apache.commons.io.FileUtils.readFileToString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assumptions.assumeThat;
 
-class ChromeProfileByFactoryTest extends IntegrationTest {
+final class ChromeProfileByFactoryTest extends IntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(ChromeProfileByFactoryTest.class);
   private static final File downloadsFolder = new File(Configuration.downloadsFolder);
-  private static final File chromedriverLog = new File(downloadsFolder, "chromedriver." + nanoTime());
+  private static final File chromedriverLog = new File(downloadsFolder, "chromedriver." + nanoTime()).getAbsoluteFile();
 
   @BeforeEach
   void setUp() throws IOException {
@@ -53,7 +57,7 @@ class ChromeProfileByFactoryTest extends IntegrationTest {
     assertThat(log).contains("\"excludeSwitches\": [ \"enable-automation\" ]");
     assertThat(log).contains("\"extensions\": [  ]");
     assertThat(log).contains("\"credentials_enable_service\": false");
-    assertThat(log).contains("\"download.default_directory\": \"" + downloadsFolder.getAbsolutePath() + "\"");
+    assertThat(log).contains("\"download.default_directory\": \"" + downloadsFolder.getAbsolutePath().replaceAll("\\\\", "\\\\\\\\"));
 
     String arguments = "\"--proxy-bypass-list=\\u003C-loopback>\", \"--no-sandbox\", \"--disable-3d-apis\"";
     if (Configuration.headless) {
@@ -64,9 +68,12 @@ class ChromeProfileByFactoryTest extends IntegrationTest {
     }
   }
 
+  @ParametersAreNonnullByDefault
   private static class MyFactory extends ChromeDriverFactory {
     @Override
-    protected ChromeDriverService buildService() {
+    @CheckReturnValue
+    @Nonnull
+    protected ChromeDriverService buildService(Config config) {
       return new ChromeDriverService.Builder()
         .withLogFile(chromedriverLog)
         .withVerbose(true)
@@ -74,11 +81,15 @@ class ChromeProfileByFactoryTest extends IntegrationTest {
     }
 
     @Override
-    protected String[] excludeSwitches() {
+    @CheckReturnValue
+    @Nonnull
+    protected String[] excludeSwitches(Capabilities commonCapabilities) {
       return new String[]{"enable-automation"};
     }
 
     @Override
+    @CheckReturnValue
+    @Nonnull
     protected List<String> createChromeArguments(Config config, Browser browser) {
       return asList("--proxy-bypass-list=<-loopback>", "--no-sandbox", "--disable-3d-apis");
     }

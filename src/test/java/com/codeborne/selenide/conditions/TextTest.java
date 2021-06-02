@@ -13,7 +13,7 @@ import static java.util.stream.Collectors.toList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class TextTest implements WithAssertions {
+final class TextTest implements WithAssertions {
   private Driver driver = mock(Driver.class);
 
   @Test
@@ -32,6 +32,16 @@ class TextTest implements WithAssertions {
   void apply_for_select() {
     assertThat(new Text("Hello World").apply(driver, select("Hello", "World"))).isFalse();
     assertThat(new Text("Hello World").apply(driver, select("Hello", " World"))).isTrue();
+  }
+
+  @Test
+  void to_string() {
+    assertThat(new Text("Hello World")).hasToString("text 'Hello World'");
+  }
+
+  @Test
+  void negate_to_string() {
+    assertThat(new Text("Hello World").negate()).hasToString("not text 'Hello World'");
   }
 
   private WebElement elementWithText(String text) {

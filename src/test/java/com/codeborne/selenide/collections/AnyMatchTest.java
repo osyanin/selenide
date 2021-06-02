@@ -3,7 +3,7 @@ package com.codeborne.selenide.collections;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.ex.ElementNotFound;
 import com.codeborne.selenide.ex.MatcherError;
-import com.codeborne.selenide.impl.WebElementsCollection;
+import com.codeborne.selenide.impl.CollectionSource;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.Test;
 
@@ -12,9 +12,9 @@ import static com.codeborne.selenide.Mocks.mockElement;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-class AnyMatchTest implements WithAssertions {
-  private SelenideElement element1 = mockElement("Hello");
-  private SelenideElement element2 = mockElement("World");
+final class AnyMatchTest implements WithAssertions {
+  private final SelenideElement element1 = mockElement("Hello");
+  private final SelenideElement element2 = mockElement("World");
 
   @Test
   void applyWithEmptyList() {
@@ -32,7 +32,7 @@ class AnyMatchTest implements WithAssertions {
 
   @Test
   void applyWithMatchingPredicate() {
-    WebElementsCollection collection = mockCollection("Collection description", element1, element2);
+    CollectionSource collection = mockCollection("Collection description", element1, element2);
 
     assertThat(new AnyMatch("Predicate description", it -> it.getText().equals("World"))
       .test(collection.getElements()))
@@ -41,7 +41,7 @@ class AnyMatchTest implements WithAssertions {
 
   @Test
   void failOnMatcherError() {
-    WebElementsCollection collection = mockCollection("Collection description");
+    CollectionSource collection = mockCollection("Collection description");
 
     assertThatThrownBy(() ->
       new AnyMatch("Predicate description", it -> it.getText().equals("World"))

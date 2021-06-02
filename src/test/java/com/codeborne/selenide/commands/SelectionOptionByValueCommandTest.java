@@ -16,18 +16,18 @@ import static java.util.Collections.emptyList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class SelectionOptionByValueCommandTest implements WithAssertions {
-  private SelenideElement proxy = mock(SelenideElement.class);
-  private WebElementSource selectField = mock(WebElementSource.class);
-  private SelectOptionByValue selectOptionByValueCommand = new SelectOptionByValue();
-  private WebElement element = mock(WebElement.class);
-  private WebElement foundElement = mock(WebElement.class);
+final class SelectionOptionByValueCommandTest implements WithAssertions {
+  private final SelenideElement proxy = mock(SelenideElement.class);
+  private final WebElementSource selectField = mock(WebElementSource.class);
+  private final SelectOptionByValue selectOptionByValueCommand = new SelectOptionByValue();
+  private final WebElement element = mock(WebElement.class);
+  private final WebElement foundElement = mock(WebElement.class);
 
   @BeforeEach
   void setup() {
     when(selectField.driver()).thenReturn(new DriverStub());
     when(selectField.getWebElement()).thenReturn(element);
-    when(selectField.getSearchCriteria()).thenReturn("By.tagName{select}");
+    when(selectField.description()).thenReturn("By.tagName{select}");
     when(element.getText()).thenReturn("walue");
     when(element.getTagName()).thenReturn("select");
     when(foundElement.isSelected()).thenReturn(true);

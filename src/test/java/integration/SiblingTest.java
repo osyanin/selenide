@@ -9,7 +9,7 @@ import static com.codeborne.selenide.Condition.id;
 import static com.codeborne.selenide.Condition.text;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class SiblingTest extends ITest {
+final class SiblingTest extends ITest {
   @BeforeEach
   void openTestPageWith() {
     openFile("page_with_selects_without_jquery.html");
@@ -30,7 +30,7 @@ class SiblingTest extends ITest {
   void errorWhenSiblingAbsent() {
     assertThatThrownBy(() -> $("#multirowTableFirstRow").sibling(3).click())
       .isInstanceOf(ElementNotFound.class)
-      .hasMessageStartingWith("Element not found {By.xpath: following-sibling::*[4]}");
+      .hasMessageStartingWith("Element not found {#multirowTableFirstRow/By.xpath: following-sibling::*[4]}");
   }
 
   @Test
@@ -48,6 +48,6 @@ class SiblingTest extends ITest {
   void errorWhenPrecedingElementAbsent() {
     assertThatThrownBy(() -> $("#multirowTableSecondRow").preceding(3).click())
       .isInstanceOf(ElementNotFound.class)
-      .hasMessageStartingWith("Element not found {By.xpath: preceding-sibling::*[4]}");
+      .hasMessageStartingWith("Element not found {#multirowTableSecondRow/By.xpath: preceding-sibling::*[4]}");
   }
 }

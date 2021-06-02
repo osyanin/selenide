@@ -1,6 +1,6 @@
 package com.codeborne.selenide.impl;
 
-import com.codeborne.selenide.proxy.DownloadedFile;
+import com.codeborne.selenide.files.DownloadedFile;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class DownloadDetectorTest {
+final class DownloadDetectorTest {
   private final long now = System.currentTimeMillis();
   private final DownloadDetector detector = new DownloadDetector();
 

@@ -16,11 +16,11 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-class EventsTest {
-  private Logger log = mock(Logger.class);
-  private Events events = spy(new Events(log));
-  private WebElement element = mock(WebElement.class);
-  private Driver driver = mock(Driver.class);
+final class EventsTest {
+  private final Logger log = mock(Logger.class);
+  private final Events events = spy(new Events(log));
+  private final WebElement element = mock(WebElement.class);
+  private final Driver driver = mock(Driver.class);
 
   @Test
   void triggersEventsByExecutingJSCode() {

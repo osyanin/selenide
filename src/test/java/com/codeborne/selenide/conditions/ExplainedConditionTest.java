@@ -1,12 +1,11 @@
 package com.codeborne.selenide.conditions;
 
 import com.codeborne.selenide.Condition;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ExplainedConditionTest {
+final class ExplainedConditionTest {
   private final Condition visible = new Visible().because("I see it");
   private final Condition hidden = new Hidden().because("I don't see it");
   private final Condition text = new Text("blah").because("I typed it");
@@ -53,7 +52,7 @@ class ExplainedConditionTest {
     assertThat(hidden.negate().toString()).isEqualTo("not hidden (because I don't see it)");
   }
 
-  @Test @Disabled
+  @Test
   void toString_haveText() {
     assertThat(text.toString()).isEqualTo("text 'blah' (because I typed it)");
     assertThat(text.negate().toString()).isEqualTo("not text 'blah' (because I typed it)");

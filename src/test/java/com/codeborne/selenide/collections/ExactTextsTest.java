@@ -17,7 +17,7 @@ import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class ExactTextsTest implements WithAssertions {
+final class ExactTextsTest implements WithAssertions {
   @Test
   void varArgsConstructor() {
     ExactTexts exactTexts = new ExactTexts("One", "Two", "Three");
@@ -61,13 +61,13 @@ class ExactTextsTest implements WithAssertions {
 
   private void failOnEmptyOrNullElementsList(List<WebElement> elements) {
     ExactTexts exactTexts = new ExactTexts("One");
-    Exception cause = new Exception("Exception method");
+    RuntimeException cause = new IllegalArgumentException("bad thing happened");
 
     assertThatThrownBy(() -> exactTexts.fail(mockCollection("Collection description"), elements, cause, 10000))
       .isInstanceOf(ElementNotFound.class)
-      .hasMessage(String.format("Element not found {Collection description}%nExpected: [One]%nScreenshot: null%n" +
+      .hasMessage(String.format("Element not found {Collection description}%nExpected: Exact texts [One]%n" +
         "Timeout: 10 s.%n" +
-        "Caused by: java.lang.Exception: Exception method"));
+        "Caused by: java.lang.IllegalArgumentException: bad thing happened"));
   }
 
   @Test
@@ -90,7 +90,7 @@ class ExactTextsTest implements WithAssertions {
         "Actual: [Hello]%n" +
         "Expected: [One]%n" +
         "Collection: Collection description%n" +
-        "Screenshot: null%nTimeout: 10 s."));
+        "Timeout: 10 s."));
   }
 
   @Test
@@ -105,7 +105,7 @@ class ExactTextsTest implements WithAssertions {
       .isInstanceOf(TextsSizeMismatch.class)
       .hasMessageContaining("Actual: [One], List size: 1")
       .hasMessageContaining("Expected: [One, Two], List size: 2")
-      .hasMessageEndingWith(String.format("Collection: Collection description%nScreenshot: null%nTimeout: 10 s."));
+      .hasMessageEndingWith(String.format("Collection: Collection description%nTimeout: 10 s."));
   }
 
   @Test

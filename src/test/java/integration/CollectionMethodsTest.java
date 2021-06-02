@@ -2,7 +2,10 @@ package integration;
 
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
+import com.codeborne.selenide.ex.DoesNotContainTextsError;
 import com.codeborne.selenide.ex.ElementNotFound;
+import com.codeborne.selenide.ex.ElementWithTextNotFound;
+import com.codeborne.selenide.ex.ListSizeMismatch;
 import com.codeborne.selenide.ex.MatcherError;
 import com.codeborne.selenide.ex.TextsMismatch;
 import com.codeborne.selenide.ex.TextsSizeMismatch;
@@ -10,16 +13,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.InvalidSelectorException;
+import org.openqa.selenium.NoSuchElementException;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.stream.Collectors;
 
 import static com.codeborne.selenide.CollectionCondition.allMatch;
 import static com.codeborne.selenide.CollectionCondition.anyMatch;
+import static com.codeborne.selenide.CollectionCondition.containExactTextsCaseSensitive;
 import static com.codeborne.selenide.CollectionCondition.empty;
 import static com.codeborne.selenide.CollectionCondition.exactTexts;
+import static com.codeborne.selenide.CollectionCondition.itemWithText;
 import static com.codeborne.selenide.CollectionCondition.noneMatch;
 import static com.codeborne.selenide.CollectionCondition.size;
 import static com.codeborne.selenide.CollectionCondition.sizeGreaterThan;
@@ -28,6 +35,7 @@ import static com.codeborne.selenide.CollectionCondition.sizeLessThan;
 import static com.codeborne.selenide.CollectionCondition.sizeLessThanOrEqual;
 import static com.codeborne.selenide.CollectionCondition.sizeNotEqual;
 import static com.codeborne.selenide.CollectionCondition.texts;
+import static com.codeborne.selenide.Condition.and;
 import static com.codeborne.selenide.Condition.cssClass;
 import static com.codeborne.selenide.Condition.exist;
 import static com.codeborne.selenide.Condition.text;
@@ -35,10 +43,11 @@ import static com.codeborne.selenide.Condition.value;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selectors.byText;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class CollectionMethodsTest extends ITest {
+final class CollectionMethodsTest extends ITest {
   @BeforeEach
   void openTestPageWithJQuery() {
     openFile("page_with_selects_without_jquery.html");
@@ -157,7 +166,8 @@ class CollectionMethodsTest extends ITest {
   @Test
   void exactTextsCheckThrowsElementNotFound() {
     assertThatThrownBy(() -> $$(".non-existing-elements").shouldHave(exactTexts("content1", "content2")))
-      .isInstanceOf(ElementNotFound.class);
+      .isInstanceOf(ElementNotFound.class)
+      .hasMessageStartingWith("Element not found {.non-existing-elements}");
   }
 
   @Test
@@ -195,6 +205,15 @@ class CollectionMethodsTest extends ITest {
     $$("#multirowTable tr").shouldHaveSize(2);
     $$("#multirowTable tr").excludeWith(text("Chack")).shouldHaveSize(0);
     $$("#multirowTable tr").excludeWith(cssClass("inexisting")).shouldHaveSize(2);
+  }
+
+  @Test
+  void errorMessageShouldShowFullAndConditionDescription() {
+    ElementsCollection filteredRows = $$("#multirowTable tr")
+      .filterBy(and("condition name", text("Chack"), text("Baskerville")));
+
+    assertThatThrownBy(() -> filteredRows.shouldHave(size(0)))
+      .hasMessageContaining("collection: #multirowTable tr.filter(condition name: text 'Chack' and text 'Baskerville'");
   }
 
   @Test
@@ -311,14 +330,36 @@ class CollectionMethodsTest extends ITest {
 
     List<String> regularSublist = $$x("//select[@name='domain']/option").stream()
       .map(SelenideElement::getText)
-      .collect(Collectors.toList()).subList(0, 2);
+      .collect(toList()).subList(0, 2);
 
     List<String> selenideSublist = collection.first(2).stream()
       .map(SelenideElement::getText)
-      .collect(Collectors.toList());
+      .collect(toList());
 
-    assertThat(selenideSublist)
-      .isEqualTo(regularSublist);
+    assertThat(selenideSublist).isEqualTo(regularSublist);
+  }
+
+  @Test
+  void canGetElementByIndex_fromFirstNElements() {
+    ElementsCollection collection = $$x("//select[@name='domain']/option").first(3).shouldHave(size(3));
+
+    collection.get(0).shouldHave(text("@livemail.ru"));
+    collection.get(1).shouldHave(text("@myrambler.ru"));
+    collection.get(2).shouldHave(text("@rusmail.ru"));
+  }
+
+  @Test
+  void canGetElementByIndex_fromFirstNElements_ofFilteredCollection() {
+    ElementsCollection collection = $$x("//select[@name='domain']/option")
+      .filterBy(text(".ru"))
+      .first(2)
+      .shouldHave(size(2));
+
+    collection.get(0).shouldHave(text("@livemail.ru"));
+    collection.get(1).shouldHave(text("@myrambler.ru"));
+    assertThatThrownBy(() -> collection.get(2).getText())
+      .isInstanceOf(IndexOutOfBoundsException.class)
+      .hasMessage("Index: 2, size: 2");
   }
 
   @Test
@@ -329,14 +370,30 @@ class CollectionMethodsTest extends ITest {
 
     List<String> regularSublist = $$x("//select[@name='domain']/option").stream()
       .map(SelenideElement::getText)
-      .collect(Collectors.toList()).subList(2, collection.size());
+      .collect(toList()).subList(2, collection.size());
 
     List<String> selenideSublist = collection.last(2).stream()
       .map(SelenideElement::getText)
-      .collect(Collectors.toList());
+      .collect(toList());
 
-    assertThat(selenideSublist)
-      .isEqualTo(regularSublist);
+    assertThat(selenideSublist).isEqualTo(regularSublist);
+  }
+
+  @Test
+  void canGetElementByIndex_fromLastNElements_ofFilteredCollection() {
+    ElementsCollection collection = $$x("//select[@name='domain']/option")
+      .filterBy(text(".ru"))
+      .last(2)
+      .shouldHave(size(2));
+
+    collection.get(0).shouldHave(text("@myrambler.ru"));
+    collection.get(1).shouldHave(text("@rusmail.ru"));
+    assertThatThrownBy(() -> collection.get(2).getText())
+      .isInstanceOf(IndexOutOfBoundsException.class)
+      .hasMessage("Index: 3");
+    assertThatThrownBy(() -> collection.get(3).getText())
+      .isInstanceOf(IndexOutOfBoundsException.class)
+      .hasMessage("Index: 4");
   }
 
   @Test
@@ -349,8 +406,54 @@ class CollectionMethodsTest extends ITest {
   }
 
   @Test
-  void shouldThrowIndexOutOfBoundsException() {
+  void shouldThrow_ElementNotFound_causedBy_IndexOutOfBoundsException_first() {
     ElementsCollection elementsCollection = $$("not-existing-locator").first().$$("#multirowTable");
+    String description = "Check throwing ElementNotFound for %s";
+
+    assertThatThrownBy(() -> elementsCollection.shouldHaveSize(1))
+      .as(description, "shouldHaveSize").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(size(1)))
+      .as(description, "size").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(sizeGreaterThan(0)))
+      .as(description, "sizeGreaterThan").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(sizeGreaterThanOrEqual(1)))
+      .as(description, "sizeGreaterThanOrEqual").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(sizeNotEqual(0)))
+      .as(description, "sizeNotEqual").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(sizeLessThan(0)))
+      .as(description, "sizeLessThan").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(sizeLessThanOrEqual(-1)))
+      .as(description, "sizeLessThanOrEqual").isInstanceOf(ListSizeMismatch.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(exactTexts("any text")))
+      .as(description, "exactTexts").isInstanceOf(ElementNotFound.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(texts("any text")))
+      .as(description, "texts").isInstanceOf(ElementNotFound.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(itemWithText("any text")))
+      .as(description, "itemWithText").isInstanceOf(ElementWithTextNotFound.class)
+      .hasCauseExactlyInstanceOf(NoSuchElementException.class);
+  }
+
+  @Test
+  void shouldThrow_ElementNotFound_causedBy_IndexOutOfBoundsException() {
+    ElementsCollection elementsCollection = $$("not-existing-locator").get(1).$$("#multirowTable");
     String description = "Check throwing ElementNotFound for %s";
 
     assertThatThrownBy(() -> elementsCollection.shouldHaveSize(1))
@@ -388,13 +491,17 @@ class CollectionMethodsTest extends ITest {
     assertThatThrownBy(() -> elementsCollection.shouldHave(texts("any text")))
       .as(description, "texts").isInstanceOf(ElementNotFound.class)
       .hasCauseExactlyInstanceOf(IndexOutOfBoundsException.class);
+
+    assertThatThrownBy(() -> elementsCollection.shouldHave(itemWithText("any text")))
+      .as(description, "itemWithText").isInstanceOf(ElementNotFound.class)
+      .hasCauseExactlyInstanceOf(IndexOutOfBoundsException.class);
   }
 
   @Test
   void errorWhenFindInLastElementOfEmptyCollection() {
     assertThatThrownBy(() -> $$("#not_exist").last().$("#multirowTable").should(exist))
       .isInstanceOf(ElementNotFound.class)
-      .hasMessageStartingWith("Element not found {#not_exist}")
+      .hasMessageStartingWith("Element not found {#not_exist:last}")
       .hasCauseInstanceOf(IndexOutOfBoundsException.class);
   }
 
@@ -402,7 +509,7 @@ class CollectionMethodsTest extends ITest {
   void errorWhenFindCollectionInLastElementOfEmptyCollection() {
     assertThatThrownBy(() -> $$("#not_exist").last().$$("#multirowTable").shouldHaveSize(1))
       .isInstanceOf(ElementNotFound.class)
-      .hasMessageStartingWith("Element not found {#not_exist.last/#multirowTable}")
+      .hasMessageStartingWith("Element not found {#not_exist:last/#multirowTable}")
       .hasCauseInstanceOf(IndexOutOfBoundsException.class);
   }
 
@@ -464,4 +571,57 @@ class CollectionMethodsTest extends ITest {
         "%nExpected: none of elements to match [value==cat] predicate"));
   }
 
+  @Test
+  void shouldItemWithText() {
+    $$("#user-table tbody tr td.firstname")
+      .shouldBe(itemWithText("Bob"));
+  }
+
+  @Test
+  void errorWhenItemWithTextNotMatchedButShouldBe() {
+    String expectedText = "Luis";
+    assertThatThrownBy(() -> $$("#user-table tbody tr td.firstname").shouldHave(itemWithText(expectedText)))
+      .isInstanceOf(ElementWithTextNotFound.class)
+      .hasMessageContaining(String.format("Element with text not found" +
+        "%nActual: %s" +
+        "%nExpected: %s", Arrays.asList("Bob", "John"), Collections.singletonList(expectedText)));
+  }
+
+  @Test
+  void shouldContainTexts() {
+    $$("#hero option")
+      .should(containExactTextsCaseSensitive("Denzel Washington", "John Mc'Lain", "Arnold \"Schwarzenegger\""));
+    $$("#user-table th")
+      .should(containExactTextsCaseSensitive("First name", "Last name"));
+  }
+
+  @Test
+  void errorWhenCollectionDoesNotContainTextsButShould() {
+    List<String> expectedTexts = Arrays.asList("@livemail.ru", "@yandex.ru", "@list.ru");
+    List<String> actualTexts = Arrays.asList("@livemail.ru", "@myrambler.ru", "@rusmail.ru", "@мыло.ру");
+    List<String> difference = Arrays.asList("@yandex.ru", "@list.ru");
+
+    assertThatThrownBy(() -> $$("[name='domain'] > option").should(containExactTextsCaseSensitive(expectedTexts)))
+      .isInstanceOf(DoesNotContainTextsError.class)
+      .hasMessageContaining(
+        String.format("The collection with text elements: %s%n" +
+            "should contain all of the following text elements: %s%n" +
+            "but could not find these elements: %s%n",
+          actualTexts, expectedTexts, difference));
+  }
+
+  @Test
+  void collectionToString() {
+    assertThat($$("not-existing-locator"))
+      .hasToString("not-existing-locator []");
+
+    assertThat($$("input[type=checkbox].red").as("red checkboxes"))
+      .hasToString("red checkboxes []");
+
+    assertThat($$(".active").first(42))
+      .hasToString(".active:first(42) []");
+
+    assertThat($$(".parent").first(2).filterBy(cssClass("child")))
+      .hasToString(".parent:first(2).filter(css class 'child') []");
+  }
 }

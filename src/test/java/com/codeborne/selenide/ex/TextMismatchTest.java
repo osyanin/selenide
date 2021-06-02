@@ -1,7 +1,7 @@
 package com.codeborne.selenide.ex;
 
 import com.codeborne.selenide.DriverStub;
-import com.codeborne.selenide.impl.WebElementsCollection;
+import com.codeborne.selenide.impl.CollectionSource;
 import org.assertj.core.api.WithAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,11 +12,11 @@ import static com.codeborne.selenide.Mocks.mockCollection;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.when;
 
-class TextMismatchTest implements WithAssertions {
-  private WebElementsCollection collection = mockCollection("Collection description");
-  private List<String> actualTexts = asList("One", "Two", "Three");
-  private List<String> expectedTexts = asList("Four", "Five", "Six");
-  private long timeoutMs = 1000L;
+final class TextMismatchTest implements WithAssertions {
+  private final CollectionSource collection = mockCollection("Collection description");
+  private final List<String> actualTexts = asList("One", "Two", "Three");
+  private final List<String> expectedTexts = asList("Four", "Five", "Six");
+  private final long timeoutMs = 1000L;
 
   @BeforeEach
   void setUp() {
@@ -31,7 +31,6 @@ class TextMismatchTest implements WithAssertions {
       "Actual: [One, Two, Three]%n" +
       "Expected: [Four, Five, Six]%n" +
       "Collection: Collection description%n" +
-      "Screenshot: null%n" +
       "Timeout: 1 s."));
   }
 
@@ -44,7 +43,6 @@ class TextMismatchTest implements WithAssertions {
       "Expected: [Four, Five, Six]%n" +
       "Because: it's said in doc%n" +
       "Collection: Collection description%n" +
-      "Screenshot: null%n" +
       "Timeout: 1 s."));
   }
 }

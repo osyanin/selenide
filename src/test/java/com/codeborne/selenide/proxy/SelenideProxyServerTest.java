@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Proxy;
 
 import java.net.InetSocketAddress;
+import java.util.Arrays;
+import java.util.List;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -14,10 +16,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class SelenideProxyServerTest implements WithAssertions {
-  private BrowserUpProxyServer bmp = mock(BrowserUpProxyServer.class);
-  private Config config = mock(Config.class);
-  private SelenideProxyServer proxyServer = new SelenideProxyServer(config, null, new InetAddressResolverStub(), bmp);
+final class SelenideProxyServerTest implements WithAssertions {
+  private final BrowserUpProxyServer bmp = mock(BrowserUpProxyServer.class);
+  private final Config config = mock(Config.class);
+  private final SelenideProxyServer proxyServer = new SelenideProxyServer(config, null, new InetAddressResolverStub(), bmp);
 
   @Test
   void canInterceptResponses() {
@@ -28,7 +30,35 @@ class SelenideProxyServerTest implements WithAssertions {
     verify(bmp).start(0);
 
     FileDownloadFilter filter = proxyServer.responseFilter("download");
-    assertThat(filter.getDownloadedFiles()).hasSize(0);
+    assertThat(filter.downloads().files()).hasSize(0);
+  }
+
+  @Test
+  void canChainProxyServersWithNoProxySettings() {
+    Proxy proxy = new Proxy();
+    proxy.setHttpProxy("127.0.0.1:3128");
+    proxy.setNoProxy("localhost,https://example.com/");
+
+    SelenideProxyServer proxyServer = new SelenideProxyServer(config, proxy, new InetAddressResolverStub(), bmp);
+    proxyServer.start();
+
+    verify(bmp).setChainedProxy(any(InetSocketAddress.class));
+    verify(bmp).setChainedProxyNonProxyHosts(Arrays.asList("localhost", "https://example.com/"));
+    verify(bmp).start(0);
+  }
+
+  @Test
+  @SuppressWarnings("unchecked")
+  void canChainProxyServersWithEmptyNoProxySettings() {
+    Proxy proxy = new Proxy();
+    proxy.setHttpProxy("127.0.0.1:3128");
+
+    SelenideProxyServer proxyServer = new SelenideProxyServer(config, proxy, new InetAddressResolverStub(), bmp);
+    proxyServer.start();
+
+    verify(bmp).setChainedProxy(any(InetSocketAddress.class));
+    verify(bmp, never()).setChainedProxyNonProxyHosts(any(List.class));
+    verify(bmp).start(0);
   }
 
   @Test

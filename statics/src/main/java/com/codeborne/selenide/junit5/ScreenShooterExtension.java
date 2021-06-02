@@ -9,11 +9,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nonnull;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.lang.reflect.Method;
 import java.util.Optional;
-
-import static com.codeborne.selenide.WebDriverRunner.driver;
-import static com.codeborne.selenide.ex.ErrorMessages.screenshot;
 
 /**
  * Use this class to automatically take screenshots in case of ANY errors in tests (not only Selenide errors).
@@ -56,6 +55,7 @@ import static com.codeborne.selenide.ex.ErrorMessages.screenshot;
  * @author Aliaksandr Rasolka
  * @since 4.12.2
  */
+@ParametersAreNonnullByDefault
 public class ScreenShooterExtension implements BeforeEachCallback, AfterEachCallback {
   private static final Logger log = LoggerFactory.getLogger(ScreenShooterExtension.class);
 
@@ -78,6 +78,7 @@ public class ScreenShooterExtension implements BeforeEachCallback, AfterEachCall
    * @param folderWithScreenshots Folder to put screenshots to
    * @return current extension instance
    */
+  @Nonnull
   public ScreenShooterExtension to(final String folderWithScreenshots) {
     Configuration.reportsFolder = folderWithScreenshots;
     return this;
@@ -97,11 +98,11 @@ public class ScreenShooterExtension implements BeforeEachCallback, AfterEachCall
   @Override
   public void afterEach(final ExtensionContext context) {
     if (captureSuccessfulTests) {
-      log.info(screenshot(driver()));
+      log.info(Screenshots.saveScreenshotAndPageSource());
     } else {
       context.getExecutionException().ifPresent(error -> {
         if (!(error instanceof UIAssertionError)) {
-          log.info(screenshot(driver()));
+          log.info(Screenshots.saveScreenshotAndPageSource());
         }
       });
     }

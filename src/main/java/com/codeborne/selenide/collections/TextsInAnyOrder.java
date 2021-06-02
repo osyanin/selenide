@@ -1,10 +1,16 @@
 package com.codeborne.selenide.collections;
 
 import com.codeborne.selenide.impl.Html;
+
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import javax.annotation.CheckReturnValue;
+import javax.annotation.ParametersAreNonnullByDefault;
+
+@ParametersAreNonnullByDefault
 public class TextsInAnyOrder extends ExactTexts {
   public TextsInAnyOrder(String... expectedTexts) {
     super(expectedTexts);
@@ -14,21 +20,23 @@ public class TextsInAnyOrder extends ExactTexts {
     super(expectedTexts);
   }
 
+  @CheckReturnValue
   @Override
   public boolean test(List<WebElement> elements) {
     if (elements.size() != expectedTexts.size()) {
       return false;
     }
 
-    for (int i = 0; i < expectedTexts.size(); i++) {
-      String expectedText = expectedTexts.get(i);
-      boolean bFound = false;
-      for (WebElement element: elements) {
-        if (Html.text.contains(element.getText(), expectedText)) {
-          bFound = true;
+    List<String> elementsTexts = elements.stream().map(WebElement::getText).collect(Collectors.toList());
+
+    for (String expectedText : expectedTexts) {
+      boolean found = false;
+      for (String elementText : elementsTexts) {
+        if (Html.text.contains(elementText, expectedText)) {
+          found = true;
         }
       }
-      if (bFound == false) {
+      if (!found) {
         return false;
       }
     }

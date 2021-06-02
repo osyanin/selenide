@@ -152,6 +152,11 @@ public class StaticConfig implements Config {
   }
 
   @Override
+  public boolean webdriverLogsEnabled() {
+    return Configuration.webdriverLogsEnabled;
+  }
+
+  @Override
   public String browserBinary() {
     return Configuration.browserBinary;
   }
@@ -159,6 +164,11 @@ public class StaticConfig implements Config {
   @Override
   public String pageLoadStrategy() {
     return Configuration.pageLoadStrategy;
+  }
+
+  @Override
+  public long pageLoadTimeout() {
+    return Configuration.pageLoadTimeout;
   }
 
   @Override
